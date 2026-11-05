@@ -328,6 +328,55 @@ h1.title{font-size:30px;line-height:1.2;margin:0;font-weight:900;letter-spacing:
   .enemy .face img{height:clamp(54px,13vh,88px)}
   .enemy.boss .face img{height:clamp(64px,17vh,120px)}
 }
+
+/* ================= 像素精灵 ================= */
+.spr{display:inline-block;vertical-align:bottom;background-repeat:no-repeat;background-position:0 0;
+  image-rendering:pixelated;image-rendering:crisp-edges;
+  width:calc(var(--w) * var(--s,1));height:calc(var(--h) * var(--s,1));
+  background-size:calc(var(--w) * var(--n) * var(--s,1)) calc(var(--h) * var(--s,1));
+  animation:spr4 var(--dur,860ms) steps(4) infinite}
+.spr[data-n="2"]{animation-name:spr2;animation-timing-function:steps(2)}
+.spr[data-n="3"]{animation-name:spr3;animation-timing-function:steps(3)}
+.spr[data-n="4"]{animation-name:spr4;animation-timing-function:steps(4)}
+.spr[data-n="5"]{animation-name:spr5;animation-timing-function:steps(5)}
+.spr[data-n="6"]{animation-name:spr6;animation-timing-function:steps(6)}
+.spr[data-a="attack"]{--dur:480ms;animation-iteration-count:1;animation-fill-mode:forwards}
+.spr[data-a="hurt"]{--dur:270ms;animation-iteration-count:1;animation-fill-mode:forwards}
+.spr[data-a="die"]{--dur:760ms;animation-iteration-count:1;animation-fill-mode:forwards}
+@keyframes spr2{to{background-position:calc(var(--w) * var(--s,1) * -2) 0}}
+@keyframes spr3{to{background-position:calc(var(--w) * var(--s,1) * -3) 0}}
+@keyframes spr4{to{background-position:calc(var(--w) * var(--s,1) * -4) 0}}
+@keyframes spr5{to{background-position:calc(var(--w) * var(--s,1) * -5) 0}}
+@keyframes spr6{to{background-position:calc(var(--w) * var(--s,1) * -6) 0}}
+.enemy .face{display:flex;align-items:flex-end;justify-content:center;height:120px;overflow:visible;position:relative;--s:2}
+.enemy.boss .face{height:160px;--s:2.4}
+.enemy .face .spr{filter:drop-shadow(0 10px 14px rgba(0,0,0,.55))}
+.me{--s:2.0}
+.me .spr{filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))}
+.keeper{--s:1.3}
+.fxlayer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:5}
+.me{position:relative}
+.fx{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);pointer-events:none;
+  background-repeat:no-repeat;image-rendering:pixelated;
+  width:calc(var(--w) * var(--fs,1.6));height:calc(var(--h) * var(--fs,1.6));
+  background-size:calc(var(--w) * var(--n) * var(--fs,1.6)) calc(var(--h) * var(--fs,1.6));
+  animation:spr5 var(--dur,340ms) steps(5) 1 forwards}
+@media (min-width:640px){
+  .enemy .face{height:150px;--s:2.6}.enemy.boss .face{height:206px;--s:3}
+  .me{--s:2.8}
+  .titleScreen .art{--s:4}
+}
+@media (min-width:900px){
+  .enemy .face{height:182px;--s:3.2}.enemy.boss .face{height:244px;--s:3.6}
+  .me{--s:2.4}
+  .titleScreen .art{--s:5}
+}
+@media (max-height:560px) and (min-width:560px){
+  .enemy .face{height:76px;--s:1.4}.enemy.boss .face{height:104px;--s:1.6}.me{--s:1.2}
+}
+@media (max-height:680px) and (max-width:420px){
+  .enemy .face{height:88px;--s:1.6}.enemy.boss .face{height:116px;--s:1.8}.me{--s:1.3}
+}
 </style>
 </head>
 <body>
@@ -625,7 +674,11 @@ function onDraw(){
 function checkEnd(){
   var b=G.b; if(!b) return true;
   if(b.state !== 'player' && b.state !== 'enemy') return true;
-  if(b.enemy.hp <= 0){ b.state='won'; onWin(); return true; }
+  if(b.enemy.hp <= 0){
+    b.state='won';
+    if(!SIM) animQ('#enemy', b.enemy.px, 'die');
+    onWin(); return true;
+  }
   if(b.player.hp <= 0){ b.state='lost'; onLose(); return true; }
   return false;
 }
@@ -636,13 +689,12 @@ function onWin(){
   G.run.gold += b.gold;
   G.reward = { gold: b.gold, cards: rollReward() };
   if(!SIM){
-    G.screen = (b.row === 8) ? 'win' : 'reward';
-    if(b.row === 8){
-      bumpStats({wins:1, row:9});
-      clearSave();
-    } else {
-      bumpStats({row: b.row + 1});
-    }
+    var _win = (b.row === 8);
+    if(_win){ bumpStats({wins:1, row:9}); clearSave(); }
+    else { bumpStats({row: b.row + 1}); }
+    var goWin = function(){ G.screen = _win ? 'win' : 'reward'; render(); };
+    if(b.row !== 8) setTimeout(goWin, 640);
+    else setTimeout(goWin, 780);
   }
 }
 function onLose(){
@@ -678,13 +730,14 @@ function checkPhase(){
   if(e.phase2Done || !e.phase2art) return;
   if(e.hp > e.maxHp*0.5) return;
   e.phase2Done = true;
-  e.art = e.phase2art;
+  e.art = e.phase2art; e.px = e.px2 || e.px;
   if(e.phase2pat) { e.pat = e.phase2pat; e.pi = 0; }
   e.strength += (e.phase2Str || 2);
   if(!SIM){ toast(e.name + ' 进入第二阶段！'); }
 }
 function enemyTurn(){
   var b=G.b, e=b.enemy, p=b.player;
+  var _hpP0 = p.hp;
   if(e.poison > 0){
     var pd = e.poison;
     e.hp -= pd; e.poison = Math.max(0, e.poison - 2);
@@ -715,6 +768,10 @@ function enemyTurn(){
   } else if(it.k === 'poison'){
     p.poison += it.v;
   }
+  if(!SIM){
+    if(p.hp < _hpP0){ animQ('.me', 'hero', 'hurt'); }
+    if(it.k === 'atk'){ animQ('#enemy', e.px, 'attack'); fxQ('.me', 'slash'); }
+  }
   if(e.weak > 0) e.weak--;
   if(e.vuln > 0) e.vuln--;
   if(e.hp <= 0){ checkEnd(); return; }
@@ -742,6 +799,7 @@ function playCard(i){
   if(!id) return;
   var c = CARDS[id];
   if(!c || c.cost > b.energy) return;
+  var _hpE = b.enemy.hp, _hpP = b.player.hp;
   b.energy -= c.cost;
   b.hand.splice(i,1);
   if(c.exhaust){ if(!b.exhaust) b.exhaust = []; b.exhaust.push(id); }
@@ -749,6 +807,15 @@ function playCard(i){
   b.playedThisTurn = (b.playedThisTurn||0) + 1;
   c.play();
   checkPhase();
+  if(!SIM){
+    if(b.enemy.hp < _hpE){
+      animQ('#enemy', b.enemy.px, 'hurt');
+      fxQ('#enemy .face', 'impact');
+    }
+    if(b.player.hp < _hpP){
+      animQ('.me', 'hero', 'hurt');
+    }
+  }
   if(b.state === 'player' || b.state === 'enemy') checkEnd();
   if(!SIM) render();
 }
@@ -763,7 +830,8 @@ function startBattle(role, row){
   var t = chooseEnemy(role, row);
   var isBoss = role === 'boss';
   var hp = isBoss ? t.hp : Math.round(t.hp * (1 + row*0.05));
-  var e = {name:t.name, emoji:t.emoji, art:t.art, phase2art:t.phase2art, phase2pat:t.phase2pat,
+  var e = {name:t.name, emoji:t.emoji, art:t.art, px:pxName(t.art), px2:pxName(t.phase2art),
+           phase2art:t.phase2art, phase2pat:t.phase2pat,
            phase2Str:t.phase2Str, phase2Done:false,
            hp:hp, maxHp:hp, block:0, strength:0, weak:0, vuln:0, poison:0,
            pat:t.pat, pi:0, dmgScale: isBoss ? 1.22 : (1 + row*0.025)};
@@ -949,10 +1017,73 @@ function backdrop(row, name){
   var n = name || FLOOR_BG[Math.min(8, Math.max(0, row||0))];
   return '<div class="bgimg" style="background-image:url(art/bg/'+n+'.webp)"></div>';
 }
+
+/* ================= 像素精灵 ================= */
+var PX={"bell-attack":[37,52,6],"bell-die":[43,52,6],"bell-hurt":[35,52,3],"bell-idle":[35,52,4],"bomber-attack":[40,48,6],"bomber-die":[46,48,6],"bomber-hurt":[38,48,3],"bomber-idle":[38,48,4],"boss-attack":[75,70,6],"boss-die":[81,71,6],"boss-hurt":[71,70,3],"boss-idle":[71,70,4],"boss-p2-attack":[72,70,6],"boss-p2-die":[78,71,6],"boss-p2-hurt":[68,70,3],"boss-p2-idle":[68,70,4],"captain-attack":[70,64,6],"captain-die":[76,65,6],"captain-hurt":[66,64,3],"captain-idle":[66,64,4],"captain-p2-attack":[74,64,6],"captain-p2-die":[80,65,6],"captain-p2-hurt":[70,64,3],"captain-p2-idle":[70,64,4],"chaser-attack":[52,54,6],"chaser-die":[57,56,6],"chaser-hurt":[49,54,3],"chaser-idle":[49,54,4],"crate-attack":[60,38,6],"crate-die":[61,42,6],"crate-hurt":[57,38,3],"crate-idle":[57,38,4],"dog-attack":[72,44,6],"dog-die":[74,49,6],"dog-hurt":[68,44,3],"dog-idle":[68,44,4],"fx-heal":[42,46,6],"fx-impact":[46,46,5],"fx-slash":[50,50,5],"general-attack":[71,66,6],"general-die":[77,67,6],"general-hurt":[67,66,3],"general-idle":[67,66,4],"general-p2-attack":[71,66,6],"general-p2-die":[77,67,6],"general-p2-hurt":[67,66,3],"general-p2-idle":[67,66,4],"hammer-attack":[59,56,6],"hammer-die":[64,58,6],"hammer-hurt":[56,56,3],"hammer-idle":[56,56,4],"hero-attack":[37,64,6],"hero-die":[45,64,6],"hero-hurt":[35,64,3],"hero-idle":[35,64,4],"jester-attack":[42,54,6],"jester-die":[48,54,6],"jester-hurt":[40,54,3],"jester-idle":[40,54,4],"marshal-attack":[61,64,6],"marshal-die":[68,65,6],"marshal-hurt":[58,64,3],"marshal-idle":[58,64,4],"marshal-p2-attack":[66,64,6],"marshal-p2-die":[73,65,6],"marshal-p2-hurt":[63,64,3],"marshal-p2-idle":[63,64,4],"mimic-attack":[58,50,6],"mimic-die":[63,52,6],"mimic-hurt":[55,50,3],"mimic-idle":[55,50,4],"penguin-attack":[28,52,6],"penguin-die":[35,52,6],"penguin-hurt":[27,52,3],"penguin-idle":[27,52,4],"penguin-rage-attack":[60,56,6],"penguin-rage-die":[65,58,6],"penguin-rage-hurt":[57,56,3],"penguin-rage-idle":[57,56,4],"princess-attack":[31,62,6],"princess-die":[40,62,6],"princess-hurt":[30,62,3],"princess-idle":[30,62,4],"princess-laugh-attack":[31,62,6],"princess-laugh-die":[40,62,6],"princess-laugh-hurt":[30,62,3],"princess-laugh-idle":[30,62,4],"scribe-attack":[35,52,6],"scribe-die":[41,52,6],"scribe-hurt":[33,52,3],"scribe-idle":[33,52,4],"shield-attack":[55,54,6],"shield-die":[60,56,6],"shield-hurt":[52,54,3],"shield-idle":[52,54,4],"shooter-attack":[39,52,6],"shooter-die":[45,52,6],"shooter-hurt":[37,52,3],"shooter-idle":[37,52,4]};
+function pxName(path){
+  if(!path) return '';
+  var m = /char\/([a-z0-9\-]+)\.webp/.exec(path);
+  return m ? m[1] : '';
+}
+function spr(base, anim){
+  var info = PX[base + '-' + anim] || PX[base + '-idle'];
+  if(!info) return '';
+  return '<span class="spr" data-base="'+base+'" data-a="'+anim+'" data-n="'+info[2]+'" ' +
+    'style="--w:'+info[0]+'px;--h:'+info[1]+'px;--n:'+info[2]+';background-image:url(art/px/'+base+'-'+anim+'.png)"></span>';
+}
+function sprApply(el, base, anim, opts){
+  var info = PX[base + '-' + anim];
+  if(!info) return;
+  el.dataset.base = base;
+  el.dataset.a = anim;
+  el.dataset.n = info[2];
+  el.style.setProperty('--w', info[0] + 'px');
+  el.style.setProperty('--h', info[1] + 'px');
+  el.style.setProperty('--n', info[2]);
+  el.style.backgroundImage = 'url(art/px/' + base + '-' + anim + '.png)';
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+  if(opts && opts.hold === false){
+    setTimeout(function(){
+      var now = document.querySelector('.spr[data-a="' + anim + '"]');
+      if(now && now === el) sprApply(el, base, 'idle');
+    }, (opts.ms || 460));
+  }
+}
+var FXQ = [];
+function animQ(sel, base, anim, ms){
+  FXQ.push({sel:sel, base:base, anim:anim, ms:ms});
+}
+function fxQ(sel, kind){
+  FXQ.push({fx:true, sel:sel, kind:kind});
+}
+function applyQ(){
+  var q = FXQ; FXQ = [];
+  q.forEach(function(it){
+    var host = document.querySelector(it.sel);
+    if(!host) return;
+    if(it.fx){ spawnFx(host, it.kind); return; }
+    var el = host.classList && host.classList.contains('spr') ? host : host.querySelector('.spr');
+    if(!el) return;
+    sprApply(el, it.base, it.anim, {ms: it.ms || 460});
+  });
+}
+function spawnFx(host, kind){
+  var info = PX['fx-' + kind];
+  if(!info) return;
+  var layer = document.createElement('div');
+  layer.className = 'fxlayer';
+  layer.innerHTML = '<span class="fx" style="--w:'+info[0]+'px;--h:'+info[1]+'px;--n:'+info[2] +
+    ';background-image:url(art/px/fx-'+kind+'.png)"></span>';
+  host.appendChild(layer);
+  setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); }, 420);
+}
+
 function screenTitle(){
   return '<div class="screen titleScreen">' + backdrop(0, 'cover') +
     '<div class="titlewrap">' +
-      '<div class="center"><img class="art hero" src="art/char/hero-poster.webp" alt="奶蛙勇者"/>' +
+      '<div class="center"><span class="art" style="--s:3.4">'+spr('hero','idle')+'</span>' +
       '<h1 class="title">奶蛙远征</h1>' +
       '<div class="sub">从憋笑魔王手中救回公主的<br/>卡牌构筑 · 肉鸽爬塔</div></div>' +
       '<div class="panel small muted" style="line-height:1.8">' +
@@ -1014,14 +1145,14 @@ function screenBattle(){
           '<div class="bar hp"><i style="width:'+hpPct+'%"></i></div></div>' +
           '<div class="energy">⚡ '+b.energy+' / '+b.maxEnergy+'</div></div>' +
         '<div class="arena"><div class="enemy'+(e.maxHp>=100?' boss':'')+'" id="enemy">' +
-          '<div class="face">'+(e.art?'<img src="'+e.art+'" alt=""/>':e.emoji)+'</div>' +
+          '<div class="face">'+(e.px?spr(e.px,'idle'):(e.art?'<img src="'+e.art+'" alt=""/>':e.emoji))+'</div>' +
           '<div class="enm">'+e.name+(e.phase2Done ? '<span class="phase2">第二阶段</span>' : '')+'</div>' +
           '<div class="bar ehp"><i style="width:'+ehpPct+'%"></i></div>' +
           '<div class="enums">'+Math.max(0,e.hp)+' / '+e.maxHp+'</div>' +
           '<div class="intent">'+intentText(it, e)+'</div>' +
           '<div class="statuses">'+statusChips(e) + (e.block>0 ? '<span class="st">🧱 格挡 '+e.block+'</span>' : '')+'</div>' +
         '</div>' +
-          '<div class="me"><img src="art/char/'+(p.hp/p.maxHp<=0.34?'hero-guard-hit':'hero')+'.webp" alt=""/>' + (p.block>0 ? '<span class="blk">🛡️ '+p.block+'</span>' : '') + '</div>' +
+          '<div class="me">'+spr('hero', p.hp/p.maxHp<=0.34?'hurt':'idle')+'' + (p.block>0 ? '<span class="blk">🛡️ '+p.block+'</span>' : '') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="bright">' +
@@ -1057,7 +1188,7 @@ function screenShop(){
   var disc = hasRelic('coinrelic') ? 0.75 : 1;
   return '<div class="screen">' + backdrop(r.row) +
     '<div class="topbar"><span>🛒 王城商店</span><span class="grow"></span><span class="chip">🃏 '+r.deck.length+' 张</span></div>' +
-    '<div class="keeper"><img src="art/char/jester.webp" alt=""/><div>小丑商人：“要不是为了看笑话，这些好牌我才不卖。”</div></div>' +
+    '<div class="keeper">'+spr('jester','idle')+'<div>小丑商人：“要不是为了看笑话，这些好牌我才不卖。”</div></div>' +
     '<div class="items">' + s.cards.map(function(id,i){
       var c = CARDS[id], price = Math.round(s.prices[i]*disc);
       var can = r.gold >= price;
@@ -1076,7 +1207,7 @@ function screenShop(){
 
 function screenRest(){
   return '<div class="screen" style="justify-content:center;gap:14px">' + backdrop(G.run.row) +
-    '<div class="center"><img class="art mid" src="art/char/hero.webp" style="height:120px;width:auto;opacity:.92" alt=""/>' +
+    '<div class="center"><span class="art" style="--s:2.05;opacity:.95">'+spr('hero','idle')+'</span>' +
       '<div style="font-weight:900;font-size:18px;margin-top:8px">篝火 🔥</div>' +
       '<div class="small muted" style="margin-top:6px">喘口气，或者把无用的牌烧掉。</div></div>' +
     '<button class="btn primary wide" data-act="restheal">🥛 休息 · 回复 30% 生命</button>' +
@@ -1164,7 +1295,7 @@ function screenEvent(){
 
 function screenWin(){
   return '<div class="screen" style="justify-content:center;gap:16px">' + backdrop(8) +
-    '<div class="center"><img class="art mid" src="art/char/princess.webp" style="height:158px;width:auto" alt=""/>' +
+    '<div class="center"><span class="art" style="--s:2.8">'+spr('princess','idle')+'</span>' +
       '<h1 class="title" style="font-size:26px">公主得救了！</h1>' +
       '<div class="sub">憋笑魔王终于没憋住，笑到原地爆炸。<br/>奶蛙勇者，凯旋。</div></div>' +
     '<div class="panel small muted">最终生命 '+G.run.hp+' / '+G.run.maxHp+' · 金币 '+G.run.gold+' · 卡组 '+G.run.deck.length+' 张</div>' +
@@ -1174,7 +1305,7 @@ function screenWin(){
 
 function screenOver(){
   return '<div class="screen" style="justify-content:center;gap:16px">' + backdrop(G.run.row) +
-    '<div class="center"><img class="art mid" src="art/char/hero-guard-hit.webp" style="height:118px;width:auto" alt=""/>' +
+    '<div class="center"><span class="art" style="--s:2.2">'+spr('hero','hurt')+'</span>' +
       '<h1 class="title" style="font-size:24px;background:linear-gradient(180deg,#ffd0d0,#ff6b6b);-webkit-background-clip:text;background-clip:text">奶蛙倒下了</h1>' +
       '<div class="sub">止步第 '+(G.run.row+1)+' 层。<br/>下次记得多带点防御牌。</div></div>' +
     '<button class="btn primary wide" data-act="again">重新远征</button>' +
@@ -1197,6 +1328,7 @@ function render(){
     var ml = app.querySelector('.maplist');
     if(ml) ml.scrollTop = 0;
   }
+  applyQ();
 }
 
 /* ================= 事件表 ================= */
