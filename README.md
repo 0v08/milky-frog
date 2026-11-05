@@ -1,4 +1,4 @@
-# 奶蛙远征 · 卡牌构筑肉鸽
+﻿# 奶蛙远征 · 卡牌构筑肉鸽
 
 **在线玩 → <https://0v08.github.io/milky-frog/>** 手机 / 电脑 / 平板打开即可，无需安装；手机浏览器菜单里选「添加到主屏幕」可当 App 用，断网也能继续玩。
 
@@ -60,33 +60,46 @@ Boss 从 4 个里随机：憋笑魔王、队长、将军、元帅。血量打到
 - **7 段场景背景**：村庄 → 森林 → 雪山 → 大桥 → 城堡庭院 → 大厅 → 王座间，按层数递进。
 - **4 个随机事件**：三眼商人、蛙之泉、赌徒青蛙、古老石碑。
 
-## 像素立绘与动作
+## 动态立绘与动作
 
-原版是 3D 渲染的静态图，这里在本地转成了**像素小人 + 序列帧动画**，全程离线生成、不依赖任何外部服务。
+立绘直接用原版 3D 渲染图（`art/char/*.webp`），靠 CSS 动画让它动起来，不需要序列帧：
 
-| 目录 | 内容 |
+| 状态 | 表现 |
 | --- | --- |
-| `art/px/{角色}-idle.png` | 待机，4 帧（轻微上下浮动 + 呼吸压缩） |
-| `art/px/{角色}-attack.png` | 出手，6 帧（后拉蓄力 → 前冲 → 收势） |
-| `art/px/{角色}-hurt.png` | 挨打，3 帧（红闪 → 白闪 → 余震） |
-| `art/px/{角色}-die.png` | 倒下，6 帧（下沉 + 压扁 + 旋转 + 淡出） |
-| `art/px/fx-{slash,impact,heal}.png` | 打击火花、命中星爆、治疗粒子 |
-| `art/px/meta.json` | 每张图的帧宽、帧高、帧数 |
+| 待机 idle | 2.4s 循环呼吸浮动（上下 ±4px + 轻微压扁） |
+| 出手 attack | 前冲再回位 + 放大到 1.06 倍，敌人出手时同步触发 |
+| 挨打 hurt | 0.36s 内左右抖动 + 加亮加饱和闪红 |
+| 倒下 die | 下沉 18px、压扁、旋转 12°、透明度到 0.25，停在最后一帧 |
 
-生成方式（`_px.py`，需要 Pillow）：裁掉透明边 → 按角色身高缩到 32~64px 的小图 → alpha 二值化做出硬边 → 中位切分量化到 26 色 → 用 NEAREST 做位移/压缩/旋转得到各帧 → 横向拼成精灵图。所有帧共用一格尺寸，所以直接当 CSS 精灵图用。
+命中特效是三个纯 CSS 元素（`.fxhit` 星爆、`.fxslash` 刀光、`.fxheal` 治疗光），不再依赖图片。
 
-播放靠纯 CSS：`.spr` 用 `background-position` 配合 `steps(n)` 逐帧跳，`--w/--h/--n/--s` 四个变量控制帧宽、帧高、帧数、放大倍数（放大倍数由容器和四个断点决定，保持整数倍才不糊）。动作由 JS 排队触发：
+动作由 JS 排队触发，队列在每次 `render()` 末尾统一播放：
 
 ```js
 animQ('#enemy', b.enemy.px, 'hurt');   // 敌人挨打
-fxQ('#enemy .face', 'impact');          // 命中特效
-animQ('#enemy', e.px, 'attack');        // 敌人出手
-fxQ('.me', 'slash');                    // 玩家被砍
+fxQ('#enemy .face', 'impact');         // 命中特效
+animQ('#enemy', e.px, 'attack');       // 敌人出手
+fxQ('.me', 'slash');                   // 玩家被砍
 ```
 
-队列在每次 `render()` 末尾统一播放（`applyQ()`），所以状态重绘和动画不打架。
+`sprApply()` 切 `data-a` 并重启动画（`animation:none` → 读 `offsetWidth` → 恢复），一次性动作在 330ms（出手 480ms）后自动回落 `idle`——早期版本漏了这步，立绘会卡在红闪或出手姿势上。
 
-**换成别的图**：把新图丢进 `_px.py` 的 `CHARS` 表重跑一遍，`meta.json` 会更新；`index.html` 里的 `PX` 表是构建时内联进去的（`_pxlit.txt`），改完替换那一行即可。
+**换图**：把同名 webp 丢进 `art/char/` 覆盖即可，尺寸由 CSS `clamp()` 自适应，不用改代码。
+
+## 背景音乐
+
+三首 CC0（公共领域）曲子，按 `audio/` 里的文件名直接替换即可：
+
+| 文件 | 用在哪 | 来源 |
+| --- | --- | --- |
+| `audio/title.ogg` | 标题页 | Trouble in the Garden — Augmentality / HaelDB（OpenGameArt, CC0） |
+| `audio/main.mp3` | 地图 / 商店 / 篝火 / 事件 | Four Loop（OpenGameArt, CC0） |
+| `audio/battle.mp3` | 战斗 | Fast Background（OpenGameArt, CC0） |
+
+- 切屏自动换曲（`bgmTrack(screen)`），0.5 秒淡入淡出，不会硬切。
+- 浏览器禁止自动播放，所以第一次点「开始远征」才出声，之后一直循环。
+- 右上角喇叭按钮静音，状态记在 `localStorage['milkyfrog.muted']`，下次打开还记得。
+- 懒加载：只加载当前屏幕那一首，`preload='none'`，不拖慢首屏。
 
 ## 美术素材
 

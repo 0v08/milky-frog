@@ -1,7 +1,7 @@
 /* 奶蛙远征 · Service Worker
    策略：导航请求走「网络优先」保证拿到新版；静态资源走「缓存优先」保证离线可玩。
    首次只预缓存首屏必需的小文件，其余美术在首次用到时按需缓存（避免第一次打开等太久）。 */
-const VERSION = 'v1.2.0';
+const VERSION = 'v1.3.0';
 const CACHE = 'milkyfrog-' + VERSION;
 
 const PRECACHE = [
@@ -12,9 +12,10 @@ const PRECACHE = [
   './icon-512.png',
   './apple-touch-icon.png',
   './art/bg/village.webp',
-  './art/px/hero-idle.png',
-  './art/px/crate-idle.png',
-  './art/px/penguin-idle.png'
+  './art/char/hero.webp',
+  './art/char/crate.webp',
+  './art/char/penguin.webp',
+  './audio/battle.mp3'
 ];
 
 self.addEventListener('install', e => {

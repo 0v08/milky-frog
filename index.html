@@ -329,54 +329,85 @@ h1.title{font-size:30px;line-height:1.2;margin:0;font-weight:900;letter-spacing:
   .enemy.boss .face img{height:clamp(64px,17vh,120px)}
 }
 
-/* ================= 像素精灵 ================= */
-.spr{display:inline-block;vertical-align:bottom;background-repeat:no-repeat;background-position:0 0;
-  image-rendering:pixelated;image-rendering:crisp-edges;
-  width:calc(var(--w) * var(--s,1));height:calc(var(--h) * var(--s,1));
-  background-size:calc(var(--w) * var(--n) * var(--s,1)) calc(var(--h) * var(--s,1));
-  animation:spr4 var(--dur,860ms) steps(4) infinite}
-.spr[data-n="2"]{animation-name:spr2;animation-timing-function:steps(2)}
-.spr[data-n="3"]{animation-name:spr3;animation-timing-function:steps(3)}
-.spr[data-n="4"]{animation-name:spr4;animation-timing-function:steps(4)}
-.spr[data-n="5"]{animation-name:spr5;animation-timing-function:steps(5)}
-.spr[data-n="6"]{animation-name:spr6;animation-timing-function:steps(6)}
-.spr[data-a="attack"]{--dur:480ms;animation-iteration-count:1;animation-fill-mode:forwards}
-.spr[data-a="hurt"]{--dur:270ms;animation-iteration-count:1;animation-fill-mode:forwards}
-.spr[data-a="die"]{--dur:760ms;animation-iteration-count:1;animation-fill-mode:forwards}
-@keyframes spr2{to{background-position:calc(var(--w) * var(--s,1) * -2) 0}}
-@keyframes spr3{to{background-position:calc(var(--w) * var(--s,1) * -3) 0}}
-@keyframes spr4{to{background-position:calc(var(--w) * var(--s,1) * -4) 0}}
-@keyframes spr5{to{background-position:calc(var(--w) * var(--s,1) * -5) 0}}
-@keyframes spr6{to{background-position:calc(var(--w) * var(--s,1) * -6) 0}}
-.enemy .face{display:flex;align-items:flex-end;justify-content:center;height:120px;overflow:visible;position:relative;--s:2}
-.enemy.boss .face{height:160px;--s:2.4}
-.enemy .face .spr{filter:drop-shadow(0 10px 14px rgba(0,0,0,.55))}
-.me{--s:2.0}
-.me .spr{filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))}
-.keeper{--s:1.3}
+/* ================= 立绘与动作（原图 + CSS 动画） ================= */
+.chr{display:inline-block;position:relative;vertical-align:bottom;line-height:0;
+  transform-origin:50% 100%;will-change:transform}
+.chr img{display:block;max-width:100%;-webkit-user-drag:none;
+  filter:drop-shadow(0 10px 12px rgba(0,0,0,.45))}
+.art .chr img{height:100%;width:auto}
+.chr[data-a="idle"]{animation:breathe 3.2s ease-in-out infinite}
+.chr[data-a="attack"]{animation:lunge 470ms cubic-bezier(.32,1.5,.45,1)}
+.chr[data-a="hurt"]{animation:shake 320ms ease-out}
+.chr[data-a="die"]{animation:fall 760ms ease-in forwards}
+@keyframes breathe{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-1.2%) scale(.994,1.016)}}
+@keyframes lunge{0%{transform:translateX(0) scale(1)}18%{transform:translateX(-7%) scale(1.02)}
+  46%{transform:translateX(13%) scale(1.07)}72%{transform:translateX(5%) scale(1.02)}100%{transform:translateX(0) scale(1)}}
+@keyframes shake{0%{transform:translateX(-5%) rotate(-2.5deg);filter:brightness(1.45) saturate(2.2) hue-rotate(-16deg)}
+  45%{transform:translateX(4%) rotate(1.5deg);filter:brightness(1.2) saturate(1.6) hue-rotate(-8deg)}
+  100%{transform:translateX(0) rotate(0);filter:none}}
+@keyframes fall{0%{transform:translateY(0) rotate(0) scale(1,1);opacity:1}
+  55%{transform:translateY(7%) rotate(9deg) scaleY(.95);opacity:.72}
+  100%{transform:translateY(17%) rotate(19deg) scaleY(.86);opacity:.15}}
 .fxlayer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:5}
-.me{position:relative}
-.fx{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);pointer-events:none;
-  background-repeat:no-repeat;image-rendering:pixelated;
-  width:calc(var(--w) * var(--fs,1.6));height:calc(var(--h) * var(--fs,1.6));
-  background-size:calc(var(--w) * var(--n) * var(--fs,1.6)) calc(var(--h) * var(--fs,1.6));
-  animation:spr5 var(--dur,340ms) steps(5) 1 forwards}
+.fxhit{position:absolute;left:50%;top:44%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,#ffe08a 36%,rgba(255,168,60,.55) 58%,transparent 72%);
+  animation:fxhit 320ms ease-out forwards}
+@keyframes fxhit{0%{transform:scale(.25);opacity:1}55%{transform:scale(1.02);opacity:.95}100%{transform:scale(1.45);opacity:0}}
+.fxslash{position:absolute;left:50%;top:46%;width:130px;height:9px;margin:-4px 0 0 -65px;border-radius:5px;
+  background:linear-gradient(90deg,transparent 0%,#fff 32%,#bfe9ff 62%,transparent 100%);
+  animation:fxslash 340ms ease-out forwards}
+@keyframes fxslash{0%{transform:rotate(-26deg) scaleX(.15);opacity:0}
+  30%{opacity:1}70%{opacity:.9}100%{transform:rotate(-26deg) scaleX(1.35);opacity:0}}
+.fxheal{position:absolute;left:50%;top:50%;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;
+  background:radial-gradient(circle,rgba(140,255,180,.85) 0%,rgba(90,220,150,.35) 45%,transparent 70%);
+  animation:fxheal 560ms ease-out forwards}
+@keyframes fxheal{0%{transform:scale(.4);opacity:0}40%{opacity:.95}100%{transform:scale(1.25) translateY(-14%);opacity:0}}
+.enemy .face{display:flex;align-items:flex-end;justify-content:center;position:relative}
+.me{position:relative;display:flex;align-items:flex-end;justify-content:center}
 @media (min-width:640px){
-  .enemy .face{height:150px;--s:2.6}.enemy.boss .face{height:206px;--s:3}
-  .me{--s:2.8}
-  .titleScreen .art{--s:4}
+  .enemy .face{padding-top:2px}
 }
 @media (min-width:900px){
-  .enemy .face{height:182px;--s:3.2}.enemy.boss .face{height:244px;--s:3.6}
-  .me{--s:2.4}
-  .titleScreen .art{--s:5}
+  .enemy .face{height:286px;--s:2}.enemy.boss .face{height:312px}
+  .me{--s:1}
+  .keeper{--s:1}
+  .titleScreen .art{--s:3}
 }
 @media (max-height:560px) and (min-width:560px){
-  .enemy .face{height:76px;--s:1.4}.enemy.boss .face{height:104px;--s:1.6}.me{--s:1.2}
+
 }
 @media (max-height:680px) and (max-width:420px){
-  .enemy .face{height:88px;--s:1.6}.enemy.boss .face{height:116px;--s:1.8}.me{--s:1.3}
+
 }
+
+/* 立绘尺寸统一（原图） */
+.enemy .face img{height:clamp(92px,15.5vh,150px)}
+.enemy.boss .face img{height:clamp(104px,18vh,178px)}
+.me img{height:clamp(84px,14.5vh,140px)}
+.keeper img{height:56px}
+@media (min-width:640px){
+  .enemy .face img{height:clamp(120px,16vh,200px)}
+  .enemy.boss .face img{height:clamp(140px,19vh,230px)}
+  .me img{height:clamp(110px,15vh,180px)}
+}
+@media (min-width:900px){
+  .enemy .face img{height:clamp(150px,21vh,250px)}
+  .enemy.boss .face img{height:clamp(175px,25vh,290px)}
+  .me img{height:clamp(140px,19vh,215px)}
+}
+@media (max-height:560px) and (min-width:560px){
+  .enemy .face img{height:clamp(66px,19vh,120px)}
+  .enemy.boss .face img{height:clamp(76px,22vh,140px)}
+  .me img{height:clamp(60px,17vh,110px)}
+}
+@media (max-height:680px) and (max-width:420px){
+  .enemy .face img{height:clamp(74px,17vh,120px)}
+  .me img{height:clamp(68px,15vh,110px)}
+}
+.mutebtn{position:absolute;top:10px;right:12px;z-index:40;appearance:none;font:inherit;
+  font-size:15px;line-height:1;cursor:pointer;color:#dbe7f7;background:rgba(12,18,28,.72);
+  border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 9px;backdrop-filter:blur(4px)}
+.mutebtn:active{transform:scale(.94)}
 </style>
 </head>
 <body>
@@ -1019,36 +1050,28 @@ function backdrop(row, name){
 }
 
 /* ================= 像素精灵 ================= */
-var PX={"bell-attack":[37,52,6],"bell-die":[43,52,6],"bell-hurt":[35,52,3],"bell-idle":[35,52,4],"bomber-attack":[40,48,6],"bomber-die":[46,48,6],"bomber-hurt":[38,48,3],"bomber-idle":[38,48,4],"boss-attack":[75,70,6],"boss-die":[81,71,6],"boss-hurt":[71,70,3],"boss-idle":[71,70,4],"boss-p2-attack":[72,70,6],"boss-p2-die":[78,71,6],"boss-p2-hurt":[68,70,3],"boss-p2-idle":[68,70,4],"captain-attack":[70,64,6],"captain-die":[76,65,6],"captain-hurt":[66,64,3],"captain-idle":[66,64,4],"captain-p2-attack":[74,64,6],"captain-p2-die":[80,65,6],"captain-p2-hurt":[70,64,3],"captain-p2-idle":[70,64,4],"chaser-attack":[52,54,6],"chaser-die":[57,56,6],"chaser-hurt":[49,54,3],"chaser-idle":[49,54,4],"crate-attack":[60,38,6],"crate-die":[61,42,6],"crate-hurt":[57,38,3],"crate-idle":[57,38,4],"dog-attack":[72,44,6],"dog-die":[74,49,6],"dog-hurt":[68,44,3],"dog-idle":[68,44,4],"fx-heal":[42,46,6],"fx-impact":[46,46,5],"fx-slash":[50,50,5],"general-attack":[71,66,6],"general-die":[77,67,6],"general-hurt":[67,66,3],"general-idle":[67,66,4],"general-p2-attack":[71,66,6],"general-p2-die":[77,67,6],"general-p2-hurt":[67,66,3],"general-p2-idle":[67,66,4],"hammer-attack":[59,56,6],"hammer-die":[64,58,6],"hammer-hurt":[56,56,3],"hammer-idle":[56,56,4],"hero-attack":[37,64,6],"hero-die":[45,64,6],"hero-hurt":[35,64,3],"hero-idle":[35,64,4],"jester-attack":[42,54,6],"jester-die":[48,54,6],"jester-hurt":[40,54,3],"jester-idle":[40,54,4],"marshal-attack":[61,64,6],"marshal-die":[68,65,6],"marshal-hurt":[58,64,3],"marshal-idle":[58,64,4],"marshal-p2-attack":[66,64,6],"marshal-p2-die":[73,65,6],"marshal-p2-hurt":[63,64,3],"marshal-p2-idle":[63,64,4],"mimic-attack":[58,50,6],"mimic-die":[63,52,6],"mimic-hurt":[55,50,3],"mimic-idle":[55,50,4],"penguin-attack":[28,52,6],"penguin-die":[35,52,6],"penguin-hurt":[27,52,3],"penguin-idle":[27,52,4],"penguin-rage-attack":[60,56,6],"penguin-rage-die":[65,58,6],"penguin-rage-hurt":[57,56,3],"penguin-rage-idle":[57,56,4],"princess-attack":[31,62,6],"princess-die":[40,62,6],"princess-hurt":[30,62,3],"princess-idle":[30,62,4],"princess-laugh-attack":[31,62,6],"princess-laugh-die":[40,62,6],"princess-laugh-hurt":[30,62,3],"princess-laugh-idle":[30,62,4],"scribe-attack":[35,52,6],"scribe-die":[41,52,6],"scribe-hurt":[33,52,3],"scribe-idle":[33,52,4],"shield-attack":[55,54,6],"shield-die":[60,56,6],"shield-hurt":[52,54,3],"shield-idle":[52,54,4],"shooter-attack":[39,52,6],"shooter-die":[45,52,6],"shooter-hurt":[37,52,3],"shooter-idle":[37,52,4]};
+var PX={"bell-attack":[94,110,6],"bell-die":[94,110,6],"bell-hurt":[94,110,3],"bell-idle":[94,110,4],"bomber-attack":[97,102,6],"bomber-die":[97,102,6],"bomber-hurt":[97,102,3],"bomber-idle":[97,102,4],"boss-attack":[169,154,6],"boss-die":[169,154,6],"boss-hurt":[169,154,3],"boss-idle":[169,154,4],"boss-p2-attack":[165,153,6],"boss-p2-die":[165,153,6],"boss-p2-hurt":[165,153,3],"boss-p2-idle":[165,153,4],"captain-attack":[157,141,6],"captain-die":[157,141,6],"captain-hurt":[157,141,3],"captain-idle":[157,141,4],"captain-p2-attack":[164,145,6],"captain-p2-die":[164,145,6],"captain-p2-hurt":[164,145,3],"captain-p2-idle":[164,145,4],"chaser-attack":[120,116,6],"chaser-die":[120,116,6],"chaser-hurt":[120,116,3],"chaser-idle":[120,116,4],"crate-attack":[126,109,6],"crate-die":[126,109,6],"crate-hurt":[126,109,3],"crate-idle":[126,109,4],"dog-attack":[150,130,6],"dog-die":[150,130,6],"dog-hurt":[150,130,3],"dog-idle":[150,130,4],"fx-heal":[44,44,6],"fx-impact":[40,40,5],"fx-slash":[44,44,5],"general-attack":[160,144,6],"general-die":[160,144,6],"general-hurt":[160,144,3],"general-idle":[160,144,4],"general-p2-attack":[160,144,6],"general-p2-die":[160,144,6],"general-p2-hurt":[160,144,3],"general-p2-idle":[160,144,4],"hammer-attack":[135,123,6],"hammer-die":[135,123,6],"hammer-hurt":[135,123,3],"hammer-idle":[135,123,4],"hero-attack":[101,136,6],"hero-die":[101,136,6],"hero-hurt":[101,136,3],"hero-idle":[101,136,4],"jester-attack":[105,115,6],"jester-die":[105,115,6],"jester-hurt":[105,115,3],"jester-idle":[105,115,4],"marshal-attack":[142,137,6],"marshal-die":[142,137,6],"marshal-hurt":[142,137,3],"marshal-idle":[142,137,4],"marshal-p2-attack":[152,139,6],"marshal-p2-die":[152,139,6],"marshal-p2-hurt":[152,139,3],"marshal-p2-idle":[152,139,4],"mimic-attack":[128,114,6],"mimic-die":[128,114,6],"mimic-hurt":[128,114,3],"mimic-idle":[128,114,4],"penguin-attack":[80,110,6],"penguin-die":[80,110,6],"penguin-hurt":[80,110,3],"penguin-idle":[80,110,4],"penguin-rage-attack":[136,123,6],"penguin-rage-die":[136,123,6],"penguin-rage-hurt":[136,123,3],"penguin-rage-idle":[136,123,4],"princess-attack":[91,132,6],"princess-die":[91,132,6],"princess-hurt":[91,132,3],"princess-idle":[91,132,4],"scribe-attack":[89,110,6],"scribe-die":[89,110,6],"scribe-hurt":[89,110,3],"scribe-idle":[89,110,4],"shield-attack":[126,118,6],"shield-die":[126,118,6],"shield-hurt":[126,118,3],"shield-idle":[126,118,4],"shooter-attack":[99,110,6],"shooter-die":[99,110,6],"shooter-hurt":[99,110,3],"shooter-idle":[99,110,4]};
 function pxName(path){
   if(!path) return '';
   var m = /char\/([a-z0-9\-]+)\.webp/.exec(path);
   return m ? m[1] : '';
 }
 function spr(base, anim){
-  var info = PX[base + '-' + anim] || PX[base + '-idle'];
-  if(!info) return '';
-  return '<span class="spr" data-base="'+base+'" data-a="'+anim+'" data-n="'+info[2]+'" ' +
-    'style="--w:'+info[0]+'px;--h:'+info[1]+'px;--n:'+info[2]+';background-image:url(art/px/'+base+'-'+anim+'.png)"></span>';
+  if(!base) return '';
+  return '<span class="chr" data-base="'+base+'" data-a="'+anim+'">' +
+    '<img src="art/char/'+base+'.webp" alt=""></span>';
 }
 function sprApply(el, base, anim, opts){
-  var info = PX[base + '-' + anim];
-  if(!info) return;
-  el.dataset.base = base;
+  if(!el || !el.dataset) return;
   el.dataset.a = anim;
-  el.dataset.n = info[2];
-  el.style.setProperty('--w', info[0] + 'px');
-  el.style.setProperty('--h', info[1] + 'px');
-  el.style.setProperty('--n', info[2]);
-  el.style.backgroundImage = 'url(art/px/' + base + '-' + anim + '.png)';
   el.style.animation = 'none';
   void el.offsetWidth;
   el.style.animation = '';
-  if(opts && opts.hold === false){
-    setTimeout(function(){
-      var now = document.querySelector('.spr[data-a="' + anim + '"]');
-      if(now && now === el) sprApply(el, base, 'idle');
-    }, (opts.ms || 460));
+  clearTimeout(el._sprT);
+  if(!(opts && opts.hold)){
+    el._sprT = setTimeout(function(){
+      if(el.isConnected && el.dataset.a === anim) sprApply(el, base, 'idle', {hold:true});
+    }, (opts && opts.ms) || (anim === 'attack' ? 480 : 330));
   }
 }
 var FXQ = [];
@@ -1064,26 +1087,26 @@ function applyQ(){
     var host = document.querySelector(it.sel);
     if(!host) return;
     if(it.fx){ spawnFx(host, it.kind); return; }
-    var el = host.classList && host.classList.contains('spr') ? host : host.querySelector('.spr');
+    var el = host.classList && host.classList.contains('chr') ? host : host.querySelector('.chr');
     if(!el) return;
-    sprApply(el, it.base, it.anim, {ms: it.ms || 460});
+    sprApply(el, it.base, it.anim, {ms: it.ms || 460, hold: it.anim === 'die'});
   });
 }
+var FXCLS = { impact:'fxhit', slash:'fxslash', heal:'fxheal' };
 function spawnFx(host, kind){
-  var info = PX['fx-' + kind];
-  if(!info) return;
+  var cls = FXCLS[kind];
+  if(!cls) return;
   var layer = document.createElement('div');
   layer.className = 'fxlayer';
-  layer.innerHTML = '<span class="fx" style="--w:'+info[0]+'px;--h:'+info[1]+'px;--n:'+info[2] +
-    ';background-image:url(art/px/fx-'+kind+'.png)"></span>';
+  layer.innerHTML = '<i class="' + cls + '"></i>';
   host.appendChild(layer);
-  setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); }, 420);
+  setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); }, 560);
 }
 
 function screenTitle(){
   return '<div class="screen titleScreen">' + backdrop(0, 'cover') +
     '<div class="titlewrap">' +
-      '<div class="center"><span class="art" style="--s:3.4">'+spr('hero','idle')+'</span>' +
+      '<div class="center"><span class="art art-hero">'+spr('hero','idle')+'</span>' +
       '<h1 class="title">奶蛙远征</h1>' +
       '<div class="sub">从憋笑魔王手中救回公主的<br/>卡牌构筑 · 肉鸽爬塔</div></div>' +
       '<div class="panel small muted" style="line-height:1.8">' +
@@ -1207,7 +1230,7 @@ function screenShop(){
 
 function screenRest(){
   return '<div class="screen" style="justify-content:center;gap:14px">' + backdrop(G.run.row) +
-    '<div class="center"><span class="art" style="--s:2.05;opacity:.95">'+spr('hero','idle')+'</span>' +
+    '<div class="center"><span class="art" style="opacity:.95">'+spr('hero','idle')+'</span>' +
       '<div style="font-weight:900;font-size:18px;margin-top:8px">篝火 🔥</div>' +
       '<div class="small muted" style="margin-top:6px">喘口气，或者把无用的牌烧掉。</div></div>' +
     '<button class="btn primary wide" data-act="restheal">🥛 休息 · 回复 30% 生命</button>' +
@@ -1295,7 +1318,7 @@ function screenEvent(){
 
 function screenWin(){
   return '<div class="screen" style="justify-content:center;gap:16px">' + backdrop(8) +
-    '<div class="center"><span class="art" style="--s:2.8">'+spr('princess','idle')+'</span>' +
+    '<div class="center"><span class="art art-hero">'+spr('princess','idle')+'</span>' +
       '<h1 class="title" style="font-size:26px">公主得救了！</h1>' +
       '<div class="sub">憋笑魔王终于没憋住，笑到原地爆炸。<br/>奶蛙勇者，凯旋。</div></div>' +
     '<div class="panel small muted">最终生命 '+G.run.hp+' / '+G.run.maxHp+' · 金币 '+G.run.gold+' · 卡组 '+G.run.deck.length+' 张</div>' +
@@ -1305,7 +1328,7 @@ function screenWin(){
 
 function screenOver(){
   return '<div class="screen" style="justify-content:center;gap:16px">' + backdrop(G.run.row) +
-    '<div class="center"><span class="art" style="--s:2.2">'+spr('hero','hurt')+'</span>' +
+    '<div class="center"><span class="art art-hero">'+spr('hero','hurt')+'</span>' +
       '<h1 class="title" style="font-size:24px;background:linear-gradient(180deg,#ffd0d0,#ff6b6b);-webkit-background-clip:text;background-clip:text">奶蛙倒下了</h1>' +
       '<div class="sub">止步第 '+(G.run.row+1)+' 层。<br/>下次记得多带点防御牌。</div></div>' +
     '<button class="btn primary wide" data-act="again">重新远征</button>' +
@@ -1323,12 +1346,72 @@ function render(){
   };
   var fn = map[G.screen] || screenTitle;
   var withHud = G.run && ['map','battle','reward','shop','rest','remove','deck','event','awaken'].indexOf(G.screen) >= 0;
-  app.innerHTML = (withHud ? hudBar() : '') + fn() + relicModal();
+  app.innerHTML = (withHud ? hudBar() : '') + fn() + relicModal() + muteBtn();
   if(G.screen === 'map'){
     var ml = app.querySelector('.maplist');
     if(ml) ml.scrollTop = 0;
   }
   applyQ();
+  bgmTick();
+}
+
+/* ================= 背景音乐 ================= */
+var BGM = { el:null, cur:'', muted:false, want:0.32 };
+try { BGM.muted = localStorage.getItem('milkyfrog.muted') === '1'; } catch(e){}
+function bgmTrack(screen){
+  if(screen === 'battle') return {name:'battle', src:'audio/battle.mp3'};
+  if(screen === 'title') return {name:'title', src:'audio/title.ogg'};
+  if(screen === 'win' || screen === 'over') return null;
+  return {name:'main', src:'audio/main.mp3'};
+}
+function bgmVolume(v){
+  if(!BGM.el) return;
+  BGM.el.volume = Math.max(0, Math.min(1, v));
+}
+function bgmFade(to){
+  if(!BGM.el) return;
+  clearInterval(BGM._f);
+  var from = BGM.el.volume, steps = 12, i = 0;
+  BGM._f = setInterval(function(){
+    i++;
+    bgmVolume(from + (to - from) * (i / steps));
+    if(i >= steps) clearInterval(BGM._f);
+  }, 40);
+}
+function bgmTick(){
+  if(SIM) return;
+  var tr = bgmTrack(G.screen);
+  if(BGM.muted || !tr){
+    if(BGM.el && !BGM.el.paused) bgmFade(0), setTimeout(function(){ if(BGM.el && BGM.el.volume < 0.02) bgmElPause(); }, 520);
+    return;
+  }
+  if(!BGM.el){
+    BGM.el = new Audio();
+    BGM.el.loop = true;
+    BGM.el.preload = 'none';
+    BGM.el.addEventListener('error', function(){});
+  }
+  if(BGM.cur === tr.name && !BGM.el.paused) return;
+  if(BGM.cur !== tr.name){
+    BGM.cur = tr.name;
+    BGM.el.src = tr.src;
+    BGM.el.volume = 0;
+  }
+  var p = BGM.el.play();
+  if(p && p.catch) p.catch(function(){});
+  bgmFade(BGM.want);
+}
+function bgmElPause(){ try { BGM.el.pause(); } catch(e){} }
+function bgmToggle(){
+  BGM.muted = !BGM.muted;
+  try { localStorage.setItem('milkyfrog.muted', BGM.muted ? '1' : '0'); } catch(e){}
+  if(BGM.muted){ bgmFade(0); setTimeout(bgmElPause, 420); }
+  else { BGM.cur = ''; bgmTick(); }
+  render();
+}
+function muteBtn(){
+  return '<button class="mutebtn" data-act="mute" title="' + (BGM.muted ? '打开音乐' : '关闭音乐') + '">' +
+    (BGM.muted ? '🔇' : '🔊') + '</button>';
 }
 
 /* ================= 事件表 ================= */
@@ -1430,6 +1513,7 @@ document.getElementById('app').addEventListener('click', function(ev){
     leaveNode();
     return;
   }
+  if(act === 'mute'){ bgmToggle(); return; }
   if(act === 'relic'){ G.rv = el.dataset.id; render(); return; }
   if(act === 'closerelic'){ G.rv = null; render(); return; }
 
@@ -1642,7 +1726,7 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
   if(document.readyState === 'complete') regSW();
   else window.addEventListener('load', regSW);
 }
-window.__FROG__ = {G:G, CARDS:CARDS, RELICS:RELICS, PATHS:PATHS, newRun:newRun, startBattle:startBattle, render:render, enterNode:enterNode, checkPhase:checkPhase, addRelic:addRelic, readSave:readSave, restoreSave:restoreSave, clearSave:clearSave, readStats:readStats};
+window.__FROG__ = {BGM:BGM, G:G, CARDS:CARDS, RELICS:RELICS, PATHS:PATHS, newRun:newRun, startBattle:startBattle, render:render, enterNode:enterNode, checkPhase:checkPhase, addRelic:addRelic, readSave:readSave, restoreSave:restoreSave, clearSave:clearSave, readStats:readStats};
 })();
 </script>
 </body>
