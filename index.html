@@ -1,0 +1,1517 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#080e18" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="奶蛙远征" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="description" content="奶蛙远征 · 卡牌构筑肉鸽，手机电脑都能玩，自动本地存档。" />
+<title>奶蛙远征 · 卡牌肉鸽</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  color:#e9f1ff;
+  background:
+    radial-gradient(900px 520px at 50% -8%, #16324a 0%, rgba(22,50,74,0) 62%),
+    radial-gradient(760px 520px at 108% 104%, #173b2c 0%, rgba(23,59,44,0) 60%),
+    #070d16;
+  overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;
+}
+#app{max-width:520px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.bwrap{display:flex;flex-direction:column;flex:1;min-height:0}
+.bleft{display:flex;flex-direction:column;flex:1;min-height:0}
+.bright{display:flex;flex-direction:column;flex:none;min-height:0}
+.screen{position:relative;flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+.bgimg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.26;pointer-events:none}
+.bgimg::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(7,13,22,.58) 0%,rgba(7,13,22,.8) 55%,rgba(7,13,22,.95) 100%)}
+.screen>.screenbody{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.grow{flex:1}
+.muted{color:#8ea3c0}
+.small{font-size:12px}
+.center{text-align:center}
+h1.title{font-size:30px;line-height:1.2;margin:0;font-weight:900;letter-spacing:1px;
+  background:linear-gradient(180deg,#d8ffe4,#7bd88f 60%,#3f9d63);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 18px rgba(123,216,143,.25))}
+.sub{color:#8ea3c0;font-size:13px;line-height:1.7;margin:10px 0 0}
+.btn{appearance:none;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,#1d2b40,#141d2b);
+  color:#e9f1ff;border-radius:14px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;
+  transition:transform .1s,filter .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(180deg,#2f8f5b,#1e6b41);border-color:rgba(87,192,138,.45);color:#eafff3;
+  box-shadow:0 8px 22px rgba(47,143,91,.25)}
+.btn.gold{background:linear-gradient(180deg,#4a3a12,#2d230b);border-color:rgba(245,196,81,.45);color:#ffe9ad}
+.btn:disabled{opacity:.38;filter:grayscale(.6)}
+.btn.wide{width:100%}
+.row{display:flex;align-items:center;gap:10px}
+.bar{height:9px;border-radius:999px;background:#0d1725;border:1px solid rgba(255,255,255,.08);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;transition:width .25s}
+.topbar{display:flex;align-items:center;gap:8px;font-size:12px;color:#9fb3cf;margin-bottom:8px}
+.chip{background:#0e1a2a;border:1px solid rgba(255,255,255,.09);border-radius:999px;padding:4px 9px;font-size:11px;color:#b7c8de}
+/* 常驻 HUD */
+.hud{flex:none;display:flex;align-items:center;gap:8px;padding:8px 14px 7px;
+  background:linear-gradient(180deg,rgba(10,17,28,.96),rgba(10,17,28,.72));
+  border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(6px)}
+.pathchip{flex:none;font-size:11px;font-weight:800;padding:5px 9px;border-radius:10px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);white-space:nowrap}
+.paths{display:flex;flex-direction:column;gap:9px;overflow-y:auto;flex:1;padding:2px 0 8px}
+.pathcard{appearance:none;font:inherit;text-align:left;color:#e9f1ff;cursor:pointer;
+  background:linear-gradient(135deg,rgba(24,36,56,.94),rgba(13,20,32,.94));
+  border:1px solid rgba(255,255,255,.12);border-left:3px solid var(--pc);border-radius:14px;
+  padding:10px 12px;transition:transform .1s,border-color .15s}
+.pathcard:active{transform:scale(.985)}
+.pathcard:hover{border-color:var(--pc)}
+.pchead{display:flex;align-items:center;gap:7px}
+.pce{font-size:19px}
+.pcn{font-size:14px;font-weight:900;color:var(--pc)}
+.pcdot{margin-left:auto;font-size:10px;font-weight:800;color:#0d1522;background:var(--pc);
+  border-radius:6px;padding:2px 6px}
+.pctag{font-size:11px;color:#9fb4cf;margin-top:3px}
+.pcdesc{font-size:11px;color:#8ea3c0;line-height:1.45;margin-top:4px}
+.pcrelic{font-size:10.5px;color:#d9c7ff;margin-top:6px;background:rgba(160,120,255,.12);
+  border-radius:7px;padding:4px 7px}
+.phase2{font-size:9px;font-weight:800;color:#0d1522;background:#ffb347;border-radius:5px;
+  padding:1px 5px;margin-left:6px;vertical-align:2px}
+.hudgold{flex:none;display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:800;color:#ffdf9c;
+  background:rgba(74,58,18,.5);border:1px solid rgba(245,196,81,.35);border-radius:999px;padding:4px 10px}
+.hudrelics{flex:1;min-width:0;display:flex;gap:5px;overflow-x:auto;padding:1px 6px 1px 0;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 90%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,#000 90%,rgba(0,0,0,0))}
+.hudrelics::-webkit-scrollbar{display:none}
+.rchip{appearance:none;flex:none;font:inherit;font-size:11px;font-weight:700;line-height:1.2;cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;color:#d6e6fb;white-space:nowrap;
+  background:#101b2a;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:5px 9px 5px 7px;
+  transition:transform .1s,background .15s}
+.rchip .re{font-size:14px}
+.rchip:hover{background:#16243a}
+.rchip:active{transform:scale(.9)}
+.rnone{font-size:11px;color:#5d6f88;display:flex;align-items:center}
+/* 遗物详情弹层 */
+.modal{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(3,7,12,.72);backdrop-filter:blur(3px);animation:fade .16s ease-out}
+.mcard{width:100%;max-width:296px;text-align:center;padding:20px 18px;
+  background:linear-gradient(180deg,#1d2d46,#101a29);border:1px solid rgba(120,170,255,.22);
+  border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.65)}
+.mcard .e{font-size:44px;line-height:1}
+.mcard .mn{font-size:18px;font-weight:900;margin-top:10px;color:#ffe9ad}
+.mcard .md{font-size:13px;line-height:1.6;color:#b9cbe6;margin-top:8px}
+.mcard .mtip{font-size:10px;color:#6f84a0;margin-top:10px;letter-spacing:1px}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+/* ---------- 战斗 ---------- */
+.bhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hpwrap{flex:1;min-width:0}
+.hpline{display:flex;justify-content:space-between;font-size:11px;color:#a7b9d1;margin-bottom:4px}
+.hp>i{background:linear-gradient(90deg,#ff6b6b,#ffa06b)}
+.energy{font-size:13px;font-weight:800;color:#a9f0bd;background:#0e1a2a;border:1px solid rgba(123,216,143,.3);
+  border-radius:999px;padding:6px 11px;white-space:nowrap}
+.relics{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;min-height:22px}
+.relic{font-size:13px;background:#101b2a;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:2px 7px;cursor:help}
+.arena{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:0;overflow:hidden;position:relative}
+.enemy{width:100%;max-width:330px;background:linear-gradient(180deg,rgba(31,45,68,.86),rgba(15,23,36,.9));
+  border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:9px 13px;text-align:center;position:relative;
+  box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.enemy.hit{animation:shake .22s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.enemy .face{font-size:52px;line-height:1.15;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))}
+.enemy .enm{font-weight:800;font-size:14px;margin-bottom:6px}
+.ehp>i{background:linear-gradient(90deg,#ff5d5d,#ff8f5d)}
+.enums{font-size:10.5px;color:#9fb3cf;margin:4px 0 8px}
+.intent{display:inline-flex;align-items:center;gap:6px;background:#0b1422;border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:800;color:#ffd9a8}
+.statuses{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:8px;min-height:18px}
+.st{font-size:10.5px;background:#0c1626;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:2px 6px;color:#c8d7ea}
+.st.bad{border-color:rgba(255,107,107,.35);color:#ffb3b3}
+.st.good{border-color:rgba(123,216,143,.35);color:#a9f0bd}
+.shield{font-size:13px;font-weight:800;color:#9cc8ff;background:#0e1a2a;border:1px solid rgba(107,178,255,.35);
+  border-radius:999px;padding:5px 12px}
+.me{position:relative;font-size:46px;line-height:1;filter:drop-shadow(0 12px 20px rgba(0,0,0,.55));margin-top:-2px}
+.art{display:block;margin:0 auto;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55));-webkit-user-drag:none}
+.art.hero{height:196px;width:auto}.art.mid{height:104px;width:auto}.art.small{height:70px;width:auto}
+.enemy .face img{height:clamp(62px,10.5vh,104px);width:auto;max-width:100%;object-fit:contain;display:block;margin:0 auto;
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.55))}
+.enemy.boss .face img{height:clamp(76px,14vh,148px)}
+.me img{height:clamp(58px,10vh,100px);width:auto;object-fit:contain;display:block;
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.5))}
+.keeper{display:flex;align-items:center;gap:10px;background:rgba(31,45,68,.55);border:1px solid rgba(120,170,255,.14);border-radius:14px;padding:8px 12px;margin:8px 0}
+.keeper img{height:50px;width:auto;flex:none}
+.keeper div{font-size:12px;color:#b9cbe6;line-height:1.4}
+.me .blk{position:absolute;right:-30px;bottom:-2px;top:auto;font-size:12px;font-weight:900;color:#9cc8ff;background:#0e1a2a;
+  border:1px solid rgba(107,178,255,.4);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.pstatus{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;min-height:20px;margin-bottom:2px}
+.hand{display:flex;flex:none;gap:8px;overflow-x:auto;padding:10px 12px 12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.hand::-webkit-scrollbar{display:none}
+.card{position:relative;flex:0 0 auto;width:96px;height:146px;border-radius:14px;padding:9px 8px 6px;
+  display:flex;flex-direction:column;gap:2px;text-align:left;font:inherit;color:#e9f1ff;cursor:pointer;
+  scroll-snap-align:center;border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(180deg,#1c2a3e,#121a28);
+  box-shadow:0 8px 18px rgba(0,0,0,.45);transition:transform .12s,box-shadow .12s,opacity .15s}
+.card:active{transform:translateY(-10px) scale(1.05);box-shadow:0 16px 28px rgba(0,0,0,.55)}
+.card .cost{position:absolute;top:-7px;left:-7px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  font-size:12px;font-weight:900;background:#0b1422;border:1px solid #7bd88f;color:#a9f0bd;box-shadow:0 0 0 3px #070d16}
+.card .nm{font-size:12px;font-weight:800;padding-left:10px}
+.card .em{font-size:23px;text-align:center;margin:1px 0 2px}
+.card .ds{font-size:10px;line-height:1.28;color:#b9c8dd;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.card.attack{border-color:rgba(255,107,107,.4);background:linear-gradient(180deg,#2a1a24,#191219)}
+.card.skill{border-color:rgba(107,178,255,.4);background:linear-gradient(180deg,#182636,#111a26)}
+.card.power{border-color:rgba(185,139,255,.4);background:linear-gradient(180deg,#231a33,#161122)}
+.card.disabled{opacity:.42;filter:grayscale(.55)}
+.bfoot{display:flex;align-items:center;gap:10px}
+.pile{font-size:11px;color:#8ea3c0;white-space:nowrap}
+.bfoot .btn{flex:1}
+/* ---------- 地图 ---------- */
+.maplist{flex:1;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:10px;padding:6px 2px 16px}
+.mrow{display:flex;gap:10px;justify-content:center;position:relative}
+.mrow.done{opacity:.35}
+.mrow.cur .node{box-shadow:0 0 0 2px rgba(123,216,143,.55),0 10px 24px rgba(123,216,143,.15)}
+.node{flex:1;max-width:150px;appearance:none;font:inherit;color:#e9f1ff;cursor:default;
+  border:1px dashed rgba(255,255,255,.12);background:rgba(13,20,32,.78);border-radius:14px;padding:10px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.6}
+.node.avail{opacity:1;cursor:pointer;border-style:solid;border-color:rgba(255,255,255,.18);
+  background:linear-gradient(180deg,#1c2b40,#131c2a)}
+.node.avail:active{transform:scale(.96)}
+.node .ni{font-size:20px}
+.node .nl{font-size:11px;font-weight:700;color:#b7c8de}
+.node.battle .ni{color:#ffb3b3}
+.node.elite{border-color:rgba(255,107,107,.4)}
+.node.boss{border-color:rgba(245,196,81,.5);background:linear-gradient(180deg,#2a2010,#1a1408)}
+/* ---------- 通用面板 ---------- */
+.panel{background:linear-gradient(180deg,rgba(28,42,64,.92),rgba(15,23,36,.92));
+  border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.deckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;overflow-y:auto;flex:1;padding:4px 0;align-content:start;align-items:start}
+.minicard{appearance:none;font:inherit;color:#e9f1ff;text-align:left;cursor:pointer;min-height:64px;
+  border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:7px;background:linear-gradient(180deg,#1b283b,#121a27);
+  display:flex;flex-direction:column;gap:2px}
+.minicard .nm{font-size:11.5px;font-weight:800}
+.minicard .ds{font-size:10px;color:#b9c8dd;line-height:1.3}
+.minicard.qty{position:relative}
+.badge{position:absolute;top:5px;right:6px;font-size:10px;background:#0b1422;border-radius:6px;padding:0 4px;color:#a9f0bd}
+.items{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;padding:2px 0}
+.item{display:flex;align-items:center;gap:10px;background:rgba(11,17,27,.94);border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;padding:10px 12px}
+.item .ic{font-size:20px}
+.item .tx{flex:1;min-width:0;display:block;text-align:left}
+.item .t1{display:block;font-size:12.5px;font-weight:800;margin-bottom:2px;color:#f0f6ff}
+.item .t2{display:block;font-size:10.5px;color:#9db0c9;line-height:1.35}
+.price{font-size:11px;font-weight:800;color:#ffe9ad;white-space:nowrap}
+/* ---------- 特效 ---------- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+.float{position:absolute;font-weight:900;font-size:20px;text-shadow:0 2px 8px rgba(0,0,0,.8);
+  animation:floatup .75s ease-out forwards}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,0) scale(.7)}
+  25%{opacity:1;transform:translate(-50%,-14px) scale(1.15)}
+  100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#0e1a2aee;
+  border:1px solid rgba(123,216,143,.35);color:#d9ffe6;padding:8px 16px;border-radius:999px;font-size:12.5px;
+  font-weight:700;z-index:60;animation:toastin .25s ease-out}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ================= 双端 / 横竖屏适配 ================= */
+.titleScreen{justify-content:center;align-items:center}
+.titleScreen .art.hero{margin-bottom:10px}
+.titlewrap{display:flex;flex-direction:column;gap:16px;width:100%;max-width:520px;margin:0 auto}
+@media (min-height:820px){.titlewrap{gap:20px}}
+@media (min-width:640px){
+  body{background-image:
+    radial-gradient(900px 520px at 50% -8%,#16324a 0%,rgba(22,50,74,0) 62%),
+    radial-gradient(760px 520px at 108% 104%,#173b2c 0%,rgba(23,59,44,0) 60%)}
+  #app{width:100%;max-width:660px;border-radius:26px;box-shadow:0 32px 90px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.06);
+    height:min(100dvh,900px);margin:auto}
+  body{display:flex;align-items:center;justify-content:center}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;background:url(art/bg/cover.webp) center/cover no-repeat;
+    filter:blur(26px) saturate(1.1) brightness(.5);transform:scale(1.12)}
+  .screen{padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+  h1.title{font-size:36px}
+  .card{width:112px;height:178px}
+  .card .nm{font-size:12.5px}
+  .card .em{font-size:24px;margin:0 0 1px}
+  .card .ds{font-size:10px;line-height:1.25;-webkit-line-clamp:6}
+  .node{max-width:190px;padding:12px 8px}
+  .node .ni{font-size:24px}
+  .node .nl{font-size:12.5px}
+  .item{padding:12px 14px}
+  .item .t1{font-size:13.5px}
+  .item .t2{font-size:11.5px}
+  .pathcard{padding:13px 15px}
+  .enemy .face img{height:clamp(90px,15vh,150px)}
+  .enemy.boss .face img{height:clamp(104px,19vh,196px)}
+  .me img{height:clamp(84px,14vh,142px)}
+  .art.hero{height:230px}
+  .btn{padding:13px 18px;font-size:15px}
+  .hand{gap:10px}
+  .deckgrid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+  .minicard{min-height:74px}
+  .hud{padding:10px 18px 9px}
+  .rchip{font-size:12px}
+}
+
+/* 桌面：战斗改左右两栏，左舞台右操作 */
+@media (min-width:900px){
+  #app{width:100%;max-width:1060px;height:min(100dvh,860px)}
+  .screen{padding:20px 22px calc(20px + env(safe-area-inset-bottom))}
+  .bwrap{flex-direction:row;gap:22px}
+  .bleft{flex:1.05;gap:2px}
+  .bright{flex:0 0 46%;max-width:520px;justify-content:flex-end;gap:8px}
+  .bright .hand{flex-wrap:wrap;justify-content:center;align-items:flex-start;align-content:flex-start;overflow-y:auto;padding:6px 0 8px;max-height:62vh;flex:0 1 auto}
+  .bright .bfoot{justify-content:space-between}
+  .arena{justify-content:center}
+  .enemy{max-width:400px}
+  .enemy .face img{height:clamp(120px,22vh,210px)}
+  .enemy.boss .face img{height:clamp(140px,26vh,250px)}
+  .me img{height:clamp(110px,18vh,170px)}
+  .hand{gap:10px}
+  .card{width:118px;height:188px}
+  /* 地图/商店在宽屏用两列，别挤成一条线 */
+  .maplist{max-width:540px;margin:0 auto;width:100%;gap:6px}
+  .maprow{gap:8px}
+  .node{padding:6px 8px;max-width:170px;border-radius:14px}
+  .node .ni{font-size:18px;margin-bottom:1px}
+  .node .nl{font-size:11.5px}
+  .items{max-width:820px;margin:0 auto;width:100%}
+  .keeper{max-width:820px;margin:0 auto;width:100%}
+  .titlewrap{max-width:600px;gap:20px}
+  .titleScreen .art.hero{height:330px}
+  .titleScreen h1.title{font-size:44px}
+  .paths{max-width:820px;margin:0 auto;width:100%;padding:4px 0 10px}
+  .pathcard{padding:15px 18px}
+  .hud{padding:11px 22px 10px}
+  .deckgrid{grid-template-columns:repeat(auto-fill,minmax(124px,1fr));max-width:980px;margin:0 auto;width:100%}
+  .art.hero{height:290px}
+}
+
+/* 手机横屏 / 矮窗口：改成左右两栏，压缩竖向空间 */
+@media (max-height:560px) and (min-width:560px){
+  #app{width:100%;max-width:100%;height:100dvh;border-radius:0;box-shadow:none}
+  body{display:block}
+  body::before{display:none}
+  .screen{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .bwrap{flex-direction:row;gap:12px}
+  .bleft{flex:1;min-width:0}
+  .bright{flex:0 0 46%;min-width:340px;justify-content:flex-end;overflow:hidden}
+  .bright .hand{flex-wrap:nowrap;justify-content:flex-start;align-items:flex-start;align-content:flex-start;
+    overflow-x:auto;overflow-y:hidden;padding:4px 0 6px;flex:0 0 auto}
+  .arena{gap:4px}
+  .enemy{padding:7px 11px;max-width:330px}
+  .enemy .face img{height:clamp(52px,16vh,108px)}
+  .enemy.boss .face img{height:clamp(58px,19vh,132px)}
+  .me img{height:clamp(46px,13vh,92px)}
+  .arena{gap:2px}
+  .bfoot{margin-top:4px}
+  .bfoot .btn{padding:10px 16px;font-size:14px}
+  .card{width:92px;height:132px}
+  .card .ds{font-size:9.5px;-webkit-line-clamp:4}
+  .topbar{margin-bottom:2px}
+  .pstatus{min-height:0}
+  .art.hero{height:130px}
+  .maprow{gap:6px}
+  .node{padding:8px 6px}
+  .node .ni{font-size:16px}
+}
+
+/* 超小屏（iPhone SE 之类）收一点间距 */
+@media (max-height:680px) and (max-width:420px){
+  .screen{padding:10px 11px calc(10px + env(safe-area-inset-bottom))}
+  .card{width:90px;height:134px}
+  .card .ds{font-size:9.5px}
+  .hand{padding:8px 10px 10px}
+  .arena{gap:4px}
+  .enemy .face img{height:clamp(54px,13vh,88px)}
+  .enemy.boss .face img{height:clamp(64px,17vh,120px)}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="fx"></div>
+<script>
+(function(){
+'use strict';
+
+/* ================= 工具 ================= */
+var RNG = Math.random;
+function srand(seed){ var a = seed>>>0; RNG = function(){ a = (a + 0x6D2B79F5)|0;
+  var t = Math.imul(a ^ (a>>>15), 1|a); t = (t + Math.imul(t ^ (t>>>7), 61|t)) ^ t;
+  return ((t ^ (t>>>14))>>>0) / 4294967296; }; }
+function rnd(){ return RNG(); }
+function ri(n){ return Math.floor(rnd()*n); }
+function pick(a){ return a[ri(a.length)]; }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=ri(i+1), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+/* ================= 卡牌 ================= */
+var CARDS = {
+  strike:{name:'打击',emoji:'⚔️',type:'attack',cost:1,rarity:'basic',desc:'造成 <b>6</b> 点伤害',play:function(){atk(6);}},
+  defend:{name:'防御',emoji:'🛡️',type:'skill',cost:1,rarity:'basic',desc:'获得 <b>5</b> 点格挡',play:function(){blk(5);}},
+  hop:{name:'蛙跃',emoji:'🐸',type:'attack',cost:1,rarity:'basic',desc:'造成 <b>4</b> 点伤害，抽 1 张牌',play:function(){atk(4);drawCards(1);}},
+
+  heavy:{name:'重击',emoji:'💥',type:'attack',cost:2,rarity:'common',desc:'造成 <b>14</b> 点伤害',play:function(){atk(14);}},
+  combo:{name:'连击',emoji:'👊',type:'attack',cost:1,rarity:'common',desc:'造成 <b>3</b> 点伤害 2 次',play:function(){atk(3,2);}},
+  fang:{name:'毒牙',emoji:'🦷',type:'attack',cost:1,rarity:'common',desc:'造成 <b>4</b> 点伤害，施加 <b>3</b> 中毒',play:function(){atk(4);eStatus('poison',3);}},
+  kick:{name:'回旋踢',emoji:'🦵',type:'attack',cost:1,rarity:'common',desc:'造成 <b>5</b> 点伤害，施加 <b>1</b> 虚弱',play:function(){atk(5);eStatus('weak',1);}},
+  bash:{name:'撞击',emoji:'🐢',type:'attack',cost:2,rarity:'common',desc:'造成 <b>6</b> 点伤害；若你有格挡，再造成 <b>6</b> 点',play:function(){atk(6); if(G.b.player.block>0) atk(6);}},
+  wall:{name:'铁壁',emoji:'🧱',type:'skill',cost:2,rarity:'common',desc:'获得 <b>12</b> 点格挡',play:function(){blk(12);}},
+  dodge:{name:'闪避',emoji:'💨',type:'skill',cost:1,rarity:'common',desc:'获得 <b>6</b> 点格挡，抽 1 张牌',play:function(){blk(6);drawCards(1);}},
+  fog:{name:'毒雾',emoji:'☁️',type:'skill',cost:1,rarity:'common',desc:'施加 <b>6</b> 中毒',play:function(){eStatus('poison',6);}},
+  focus:{name:'凝神',emoji:'🔮',type:'skill',cost:1,rarity:'common',desc:'抽 <b>3</b> 张牌',play:function(){drawCards(3);}},
+  milk:{name:'奶昔',emoji:'🥛',type:'skill',cost:1,rarity:'common',desc:'回复 <b>8</b> 点生命',play:function(){healPlayer(8);}},
+  charge:{name:'蓄力',emoji:'💪',type:'power',cost:1,rarity:'common',desc:'获得 <b>2</b> 点力量',play:function(){pStatus('strength',2);}},
+  thorns:{name:'荆棘',emoji:'🌵',type:'power',cost:1,rarity:'common',desc:'受到攻击时反击 <b>3</b> 点伤害',play:function(){pStatus('thorns',3);}},
+
+  execute:{name:'处决',emoji:'🪓',type:'attack',cost:2,rarity:'uncommon',desc:'造成 <b>22</b> 点伤害；敌人生命低于 30% 时改为 <b>34</b>',play:function(){var e=G.b.enemy; atk(e.hp < e.maxHp*0.3 ? 34 : 22);}},
+  roar:{name:'勇者咆哮',emoji:'📢',type:'power',cost:2,rarity:'uncommon',desc:'施加 <b>3</b> 易伤，获得 <b>2</b> 点力量',play:function(){eStatus('vuln',3);pStatus('strength',2);}},
+  gen:{name:'护盾发生器',emoji:'🔋',type:'power',cost:2,rarity:'uncommon',desc:'每回合开始获得 <b>3</b> 点格挡',play:function(){pStatus('shieldGen',3);}},
+  regen:{name:'再生',emoji:'🌱',type:'power',cost:2,rarity:'uncommon',desc:'每回合结束回复 <b>3</b> 点生命',play:function(){pStatus('regen',3);}},
+  laugh:{name:'憋笑',emoji:'🤭',type:'skill',cost:2,rarity:'uncommon',desc:'施加 <b>4</b> 虚弱和 <b>4</b> 中毒',play:function(){eStatus('weak',4);eStatus('poison',4);}},
+  slam:{name:'蛙跳斩',emoji:'💫',type:'attack',cost:3,rarity:'uncommon',desc:'造成 <b>24</b> 点伤害',play:function(){atk(24);}},
+  drain:{name:'汲取',emoji:'🌙',type:'attack',cost:1,rarity:'uncommon',desc:'造成 <b>7</b> 点伤害，回复 <b>7</b> 点生命',play:function(){atk(7);healPlayer(7);}},
+
+  shieldbash:{name:'盾击',emoji:'🛡️',type:'attack',cost:2,rarity:'rare',desc:'造成等于你当前格挡值的伤害',play:function(){atk(G.b.player.block);}},
+  frogGod:{name:'蛙神祝福',emoji:'✨',type:'power',cost:2,rarity:'rare',desc:'每回合开始获得 <b>1</b> 点力量',play:function(){pStatus('frogGod',1);}},
+  rage:{name:'狂暴',emoji:'🔥',type:'power',cost:3,rarity:'rare',desc:'获得 <b>4</b> 点力量',play:function(){pStatus('strength',4);}},
+
+  /* ---- 流派：无限抽牌 ---- */
+  quickdraw:{name:'快手',emoji:'✋',type:'attack',cost:0,rarity:'common',path:'draw',desc:'造成 <b>4</b> 点伤害，抽 <b>1</b> 张牌',play:function(){atk(4);drawCards(1);}},
+  reflex:{name:'速读',emoji:'📖',type:'skill',cost:0,rarity:'common',path:'draw',exhaust:true,desc:'抽 <b>2</b> 张牌。<i>消耗</i>',play:function(){drawCards(2);}},
+  chain:{name:'连环',emoji:'🔗',type:'attack',cost:1,rarity:'uncommon',path:'draw',desc:'造成 <b>3</b> 点伤害，抽 <b>2</b> 张牌',play:function(){atk(3);drawCards(2);}},
+  flow:{name:'心流',emoji:'💧',type:'power',cost:1,rarity:'uncommon',path:'draw',desc:'每抽 <b>1</b> 张牌，对敌人造成 <b>4</b> 点伤害',play:function(){pStatus('perDraw',4);}},
+  loop:{name:'循环',emoji:'🔄',type:'skill',cost:1,rarity:'rare',path:'draw',desc:'弃掉手牌，抽等量 <b>+3</b> 张牌，获得 <b>1</b> 点能量',play:function(){var n=G.b.hand.length;G.b.discard=G.b.discard.concat(G.b.hand);G.b.hand=[];drawCards(n+3);G.b.energy+=1;}},
+  overflow:{name:'无限壶',emoji:'♾️',type:'power',cost:2,rarity:'rare',path:'draw',desc:'每回合开始额外抽 <b>2</b> 张牌',play:function(){pStatus('extraDraw',2);}},
+
+  /* ---- 流派：卖血叠伤 ---- */
+  bloodrite:{name:'血祭',emoji:'🩸',type:'skill',cost:0,rarity:'common',path:'blood',exhaust:true,desc:'失去 <b>4</b> 点生命，获得 <b>1</b> 点能量，抽 <b>2</b> 张牌。<i>消耗</i>',play:function(){hpLoss(4);G.b.energy+=1;drawCards(2);}},
+  offer:{name:'献祭',emoji:'🔥',type:'skill',cost:1,rarity:'common',path:'blood',desc:'失去 <b>6</b> 点生命，获得 <b>16</b> 点格挡',play:function(){hpLoss(6);blk(16);}},
+  bloodrage:{name:'狂血',emoji:'🌀',type:'power',cost:1,rarity:'uncommon',path:'blood',desc:'每失去 <b>1</b> 点生命，对敌人造成 <b>2</b> 点伤害',play:function(){pStatus('bloodRage',2);}},
+  pain:{name:'痛觉',emoji:'💢',type:'power',cost:1,rarity:'uncommon',path:'blood',desc:'每次受到伤害，获得 <b>1</b> 点力量',play:function(){pStatus('painStr',1);}},
+  thirst:{name:'嗜血',emoji:'🦇',type:'attack',cost:2,rarity:'uncommon',path:'blood',desc:'造成 <b>8</b> 点伤害，再加已损失生命的 <b>25%</b>',play:function(){var lost=G.b.player.maxHp-G.b.player.hp;atk(8+Math.floor(lost*0.25));}},
+  oath:{name:'血誓',emoji:'⚖️',type:'power',cost:2,rarity:'rare',path:'blood',desc:'失去 <b>9</b> 点生命，获得 <b>4</b> 点力量',play:function(){hpLoss(9);pStatus('strength',4);}},
+
+  /* ---- 流派：无限格挡 ---- */
+  bulwark:{name:'磐石',emoji:'🥌',type:'skill',cost:2,rarity:'common',path:'block',exhaust:true,desc:'获得 <b>18</b> 点格挡。<i>消耗</i>',play:function(){blk(18);}},
+  heavybash:{name:'盾压',emoji:'🔨',type:'attack',cost:1,rarity:'common',path:'block',desc:'造成 <b>6</b> 点伤害；若有格挡则造成 <b>12</b> 点',play:function(){atk(G.b.player.block>0?12:6);}},
+  shielddance:{name:'盾舞',emoji:'💃',type:'skill',cost:0,rarity:'uncommon',path:'block',desc:'获得 <b>4</b> 点格挡，本回合每打出过一张牌再 <b>+3</b>',play:function(){blk(4+(G.b.playedThisTurn||0)*3);}},
+  fortress:{name:'堡垒',emoji:'🏰',type:'power',cost:1,rarity:'uncommon',path:'block',desc:'每回合开始获得 <b>4</b> 点格挡',play:function(){pStatus('shieldGen',4);}},
+  riposte:{name:'盾反',emoji:'⚡',type:'power',cost:2,rarity:'uncommon',path:'block',desc:'每获得 <b>4</b> 点格挡，对敌人造成 <b>2</b> 点伤害',play:function(){pStatus('blockToDmg',2);}},
+  posture:{name:'铁壁架势',emoji:'🗿',type:'power',cost:2,rarity:'rare',path:'block',desc:'回合结束时保留 <b>60%</b> 格挡',play:function(){pStatus('keepBlock',60);}},
+
+  /* ---- 流派：剧毒蔓延 ---- */
+  miasma:{name:'瘴气',emoji:'🌫️',type:'skill',cost:1,rarity:'common',path:'poison',desc:'施加 <b>4</b> 层中毒和 <b>2</b> 层虚弱',play:function(){eStatus('poison',4);eStatus('weak',2);}},
+  venomblade:{name:'毒刃',emoji:'🗡️',type:'attack',cost:1,rarity:'common',path:'poison',desc:'造成 <b>5</b> 点伤害，施加 <b>3</b> 层中毒',play:function(){atk(5);eStatus('poison',3);}},
+  burst:{name:'毒爆',emoji:'💥',type:'attack',cost:2,rarity:'uncommon',path:'poison',desc:'造成等于敌人中毒层数 <b>一半</b> 的伤害',play:function(){atk(Math.max(1,Math.round((G.b.enemy.poison||0)/2)));}},
+  catalyst:{name:'催化',emoji:'🧪',type:'skill',cost:1,rarity:'rare',path:'poison',exhaust:true,desc:'敌人的中毒层数 <b>翻倍</b>。<i>消耗</i>',play:function(){var e=G.b.enemy;e.poison=Math.min(25,(e.poison||0)*2);}},
+  corrode:{name:'腐蚀',emoji:'🦠',type:'power',cost:2,rarity:'rare',path:'poison',desc:'每回合开始对敌人施加 <b>2</b> 层中毒',play:function(){pStatus('poisonAmp',2);}}
+};
+
+/* ================= 遗物 ================= */
+var PATHS = {
+  draw:{name:'无限抽牌',emoji:'♾️',relic:'fountain',color:'#7bd4ff',
+    tag:'牌越抽越多，每抽一张就是一发伤害',
+    desc:'核心：抽牌即输出。靠 0 费过牌把卡组压成一台永动机，再用「心流」把每次抽牌变成伤害。'},
+  blood:{name:'卖血叠伤',emoji:'🩸',relic:'bloodpact',color:'#ff8a9e',
+    tag:'用生命换力量，越残血越凶',
+    desc:'核心：自伤与受伤都能转化成伤害和力量。血是资源，不是命。'},
+  block:{name:'无限格挡',emoji:'🛡️',relic:'ironplate',color:'#9ee8b4',
+    tag:'格挡不清零，盾值反打',
+    desc:'核心：格挡保留、格挡转伤害。挨打的同时把伤害反弹回去，越拖越强。'},
+  poison:{name:'剧毒蔓延',emoji:'☠️',relic:'poisonjar',color:'#c9a6ff',
+    tag:'层数越叠越厚，最后一次性引爆',
+    desc:'核心：叠毒、催毒、爆毒。毒不吃格挡，专治血厚 Boss。'}
+};
+var RELICS = {
+  courage:{name:'勇气徽章',emoji:'🎖️',desc:'战斗开始时获得 8 点格挡'},
+  tear:{name:'蛙之泪',emoji:'💧',desc:'每场战斗胜利后回复 5 点生命'},
+  whetstone:{name:'磨刀石',emoji:'🪨',desc:'攻击牌伤害 +1'},
+  shieldbit:{name:'盾牌碎片',emoji:'🧩',desc:'防御牌格挡 +2'},
+  bag:{name:'抽牌袋',emoji:'🎒',desc:'每场战斗第一回合多抽 2 张牌'},
+  core:{name:'能量核心',emoji:'⚡',desc:'每回合能量 +1'},
+  venom:{name:'毒囊',emoji:'☠️',desc:'施加中毒时 +1'},
+  heart:{name:'奶蛙之心',emoji:'💚',desc:'最大生命 +15'},
+  fountain:{name:'无限蛙壶',emoji:'🫖',desc:'每回合开始额外抽 4 张牌'},
+  bloodpact:{name:'血契石',emoji:'🩸',desc:'每场战斗开始回复 6 点生命；每失去 1 点生命对敌造成 2 点伤害；半血以下每回合 +3 力量'},
+  ironplate:{name:'铁壁甲',emoji:'🧱',desc:'回合结束时保留 50% 格挡'},
+  poisonjar:{name:'剧毒瓶',emoji:'☠️',desc:'每回合开始对敌人施加 2 层中毒'}
+};
+
+/* ================= 敌人 ================= */
+var POOL_A = [
+  {name:'企鹅兵',emoji:'🐧',art:'art/char/penguin.webp',hp:26,pat:[{k:'atk',v:6},{k:'atk',v:6},{k:'blk',v:6}]},
+  {name:'木箱怪',emoji:'📦',art:'art/char/crate.webp',hp:22,pat:[{k:'atk',v:4,hits:2},{k:'atk',v:8}]},
+  {name:'宫廷小丑',emoji:'🃏',art:'art/char/jester.webp',hp:30,pat:[{k:'poison',v:4},{k:'atk',v:7},{k:'atk',v:7}]},
+  {name:'看门猎犬',emoji:'🐕',art:'art/char/dog.webp',hp:28,pat:[{k:'blk',v:8},{k:'atk',v:6}]}
+];
+var POOL_B = [
+  {name:'城堡盾卫',emoji:'🛡️',art:'art/char/shield.webp',hp:40,pat:[{k:'atk',v:9},{k:'atk',v:5,hits:2},{k:'blk',v:8}]},
+  {name:'书记官',emoji:'📖',art:'art/char/scribe.webp',hp:36,pat:[{k:'poison',v:5},{k:'atk',v:10},{k:'buff',v:1}]},
+  {name:'炸弹兵',emoji:'💣',art:'art/char/bomber.webp',hp:34,pat:[{k:'atk',v:5,hits:3},{k:'atk',v:10}]},
+  {name:'追兵',emoji:'👣',art:'art/char/chaser.webp',hp:44,pat:[{k:'atk',v:8},{k:'blk',v:10},{k:'atk',v:8}]}
+];
+var POOL_ELITE = [
+  {name:'重锤兵',emoji:'🔨',art:'art/char/hammer.webp',hp:46,pat:[{k:'atk',v:9},{k:'blk',v:10},{k:'atk',v:9},{k:'weak',v:2}]},
+  {name:'暴走企鹅',emoji:'🐧',art:'art/char/penguin-rage.webp',hp:42,pat:[{k:'atk',v:6,hits:2},{k:'buff',v:2},{k:'atk',v:11}]}
+];
+var POOL_BOSS = [
+  {name:'憋笑魔王',emoji:'👹',art:'art/char/boss.webp',phase2art:'art/char/boss-p2.webp',
+   hp:118,phase2Str:2,
+   pat:[{k:'atk',v:11},{k:'weak',v:2},{k:'atk',v:7,hits:2},{k:'buff',v:2}],
+   phase2pat:[{k:'atk',v:13},{k:'atk',v:7,hits:3},{k:'weak',v:3},{k:'atk',v:15}]},
+  {name:'队长',emoji:'🛡️',art:'art/char/captain.webp',phase2art:'art/char/captain-p2.webp',
+   hp:104,phase2Str:2,
+   pat:[{k:'atk',v:9},{k:'blk',v:12},{k:'atk',v:5,hits:3},{k:'buff',v:2}],
+   phase2pat:[{k:'atk',v:11},{k:'atk',v:6,hits:3},{k:'blk',v:16},{k:'atk',v:13}]},
+  {name:'将军',emoji:'⚔️',art:'art/char/general.webp',phase2art:'art/char/general-p2.webp',
+   hp:112,phase2Str:3,
+   pat:[{k:'buff',v:2},{k:'atk',v:13},{k:'vuln',v:2},{k:'atk',v:8,hits:2}],
+   phase2pat:[{k:'atk',v:15},{k:'buff',v:2},{k:'vuln',v:3},{k:'atk',v:9,hits:2}]},
+  {name:'元帅',emoji:'👑',art:'art/char/marshal.webp',phase2art:'art/char/marshal-p2.webp',
+   hp:108,phase2Str:2,
+   pat:[{k:'poison',v:6},{k:'blk',v:14},{k:'atk',v:10},{k:'atk',v:6,hits:3}],
+   phase2pat:[{k:'poison',v:8},{k:'atk',v:12},{k:'blk',v:18},{k:'atk',v:7,hits:3}]}
+];
+
+/* ================= 状态 ================= */
+var G = {screen:'title', run:null, b:null, reward:null, shop:null, ev:null, nodeRow:0};
+var SIM = false;
+
+/* ================= 本地存档（localStorage） ================= */
+var SAVE_KEY = 'milkyfrog.save.v1';
+var STAT_KEY = 'milkyfrog.stats.v1';
+function readSave(){
+  try{
+    var s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    if(!s || s.v !== 1 || !s.run || !s.run.deck) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function writeSave(){
+  if(SIM || !G.run) return;
+  if(G.screen === 'win' || G.screen === 'over'){ clearSave(); return; }
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v:1, screen:G.screen, ts:Date.now(),
+      run:G.run, b:G.b, shop:G.shop, reward:G.reward, ev:G.ev, rv:G.rv
+    }));
+  }catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function restoreSave(s){
+  G.run = s.run;
+  G.b = s.b || null;
+  G.shop = s.shop || null;
+  G.reward = s.reward || null;
+  G.ev = s.ev || null;
+  G.rv = null;
+  G.screen = (s.screen && s.screen !== 'title') ? s.screen : 'map';
+  if(G.screen === 'battle' && !G.b) G.screen = 'map';
+  if(G.screen === 'reward' && !G.reward) G.screen = 'map';
+  if(G.screen === 'shop' && !G.shop) G.screen = 'map';
+}
+function readStats(){
+  try{ return JSON.parse(localStorage.getItem(STAT_KEY) || 'null') || {runs:0, wins:0, best:0}; }
+  catch(e){ return {runs:0, wins:0, best:0}; }
+}
+function bumpStats(extra){
+  var s = readStats();
+  if(extra.runs) s.runs += extra.runs;
+  if(extra.wins) s.wins += extra.wins;
+  if(extra.row && extra.row > (s.best||0)) s.best = extra.row;
+  try{ localStorage.setItem(STAT_KEY, JSON.stringify(s)); }catch(e){}
+}
+
+function hasRelic(id){ return G.run.relics.indexOf(id) >= 0; }
+
+/* ================= 战斗核心 ================= */
+function calcDmg(base, src, tgt){
+  var d = base + (src.strength||0);
+  if(src.weak > 0) d = Math.floor(d*0.75);
+  if(tgt.vuln > 0) d = Math.floor(d*1.5);
+  return Math.max(0, d);
+}
+function hit(t, d){
+  var b = t.block||0, ab = Math.min(b, d);
+  t.block = b - ab;
+  t.hp -= (d - ab);
+  return d - ab;
+}
+function atk(n, hits){
+  hits = hits || 1;
+  var b = G.b; if(!b || b.state !== 'player') return;
+  var bonus = hasRelic('whetstone') ? 1 : 0;
+  for(var i=0;i<hits;i++){
+    if(b.enemy.hp <= 0) break;
+    var d = calcDmg(n+bonus, b.player, b.enemy);
+    var real = hit(b.enemy, d);
+    if(!SIM) floatText('-'+real, '#ff8a8a', '#enemy');
+  }
+  shakeEnemy();
+}
+function blk(n){
+  var b=G.b; if(!b) return;
+  var gain = n + (hasRelic('shieldbit') ? 2 : 0);
+  b.player.block += gain;
+  if(G.run && G.run.stats) G.run.stats.blockGain += gain;
+  if(b.player.blockToDmg > 0){
+    b.player.blockAcc = (b.player.blockAcc||0) + gain;
+    while(b.player.blockAcc >= 5 && b.enemy.hp > 0){
+      b.player.blockAcc -= 5;
+      b.enemy.hp -= b.player.blockToDmg;
+      if(!SIM) floatText('-'+b.player.blockToDmg, '#ff8a8a', '#enemy');
+    }
+  }
+}
+function hpLoss(n){
+  var b=G.b; if(!b || b.state !== 'player') return;
+  var p=b.player;
+  p.hp -= n;
+  if(G.run && G.run.stats) G.run.stats.hpLost += n;
+  if(!SIM) floatText('-'+n, '#ff9ecb', '.hpwrap');
+  if(p.bloodRage > 0 && b.enemy.hp > 0){
+    var d = n * p.bloodRage;
+    b.enemy.hp -= d;
+    if(!SIM) floatText('-'+d, '#ff8a8a', '#enemy');
+  }
+  if(p.hp <= 0) checkEnd();
+}
+function eStatus(k,v){
+  var b=G.b; if(!b) return;
+  var add = v + (k==='poison' && hasRelic('venom') ? 2 : 0);
+  if(k === 'poison' && G.run && G.run.stats) G.run.stats.poison += add;
+  var nv = (b.enemy[k]||0) + add;
+  if(k === 'poison') nv = Math.min(25, nv);
+  b.enemy[k] = nv;
+}
+function pStatus(k,v){
+  var b=G.b; if(!b) return;
+  b.player[k] = (b.player[k]||0) + v;
+}
+function healPlayer(n){
+  var p=G.b.player;
+  var before = p.hp;
+  p.hp = Math.min(p.maxHp, p.hp + n);
+  if(!SIM) floatText('+'+(p.hp-before), '#9ef07a');
+}
+function drawCards(n){
+  var b=G.b;
+  var limit = 10 + (b.player && b.player.handCap ? b.player.handCap : 0);
+  for(var k=0;k<n;k++){
+    if(b.hand.length >= limit) break;
+    if(!b.draw.length){
+      if(!b.discard.length) break;
+      b.draw = shuffle(b.discard.slice()); b.discard = [];
+      if(b.player && b.player.perDrawShuffle > 0){ b.player.block += b.player.perDrawShuffle; }
+    }
+    b.hand.push(b.draw.pop());
+    if(G.run && G.run.stats) G.run.stats.draws++;
+    onDraw();
+  }
+}
+function onDraw(){
+  var b=G.b;
+  if(!b || b.state !== 'player') return;
+  var p = b.player;
+  if(p.perDraw > 0 && b.enemy.hp > 0){
+    b.enemy.hp -= p.perDraw;
+    if(!SIM) floatText('-'+p.perDraw, '#ff8a8a', '#enemy');
+  }
+  if(p.perDrawBlock > 0){ p.block += p.perDrawBlock; }
+}
+function checkEnd(){
+  var b=G.b; if(!b) return true;
+  if(b.state !== 'player' && b.state !== 'enemy') return true;
+  if(b.enemy.hp <= 0){ b.state='won'; onWin(); return true; }
+  if(b.player.hp <= 0){ b.state='lost'; onLose(); return true; }
+  return false;
+}
+function onWin(){
+  var b=G.b;
+  G.run.hp = Math.max(1, b.player.hp);
+  if(hasRelic('tear')) G.run.hp = Math.min(G.run.maxHp, G.run.hp + 5);
+  G.run.gold += b.gold;
+  G.reward = { gold: b.gold, cards: rollReward() };
+  if(!SIM){
+    G.screen = (b.row === 8) ? 'win' : 'reward';
+    if(b.row === 8){
+      bumpStats({wins:1, row:9});
+      clearSave();
+    } else {
+      bumpStats({row: b.row + 1});
+    }
+  }
+}
+function onLose(){
+  if(!SIM){ bumpStats({row: (G.run.row||0) + 1}); clearSave(); }
+  G.run.hp = 0;
+  if(!SIM) G.screen = 'over';
+}
+function startPlayerTurn(){
+  var b=G.b, p=b.player;
+  b.state = 'player';
+  b.turn++;
+  b.playedThisTurn = 0;
+  p.block = p.keepBlock ? Math.floor(p.block * p.keepBlock / 100) : 0;
+  if(p.poison > 0){
+    var d = p.poison;
+    p.hp -= d; p.poison--;
+    if(!SIM) floatText('-'+d, '#9ef07a', '.hpwrap');
+  }
+  if(p.frogGod) p.strength += p.frogGod;
+  if(p.bloodPact && p.hp < p.maxHp * 0.5) p.strength += 3;
+  if(p.shieldGen) p.block += p.shieldGen;
+  if(p.hp <= 0){ b.state='lost'; onLose(); return; }
+  if(p.poisonAmp > 0 && b.enemy.hp > 0){
+    b.enemy.poison = Math.min(25, (b.enemy.poison||0) + p.poisonAmp);
+  }
+  b.energy = b.maxEnergy;
+  var extra = (hasRelic('bag') && b.turn === 1) ? 2 : 0;
+  drawCards(5 + extra + (p.extraDraw||0));
+}
+function checkPhase(){
+  var b=G.b; if(!b) return;
+  var e=b.enemy;
+  if(e.phase2Done || !e.phase2art) return;
+  if(e.hp > e.maxHp*0.5) return;
+  e.phase2Done = true;
+  e.art = e.phase2art;
+  if(e.phase2pat) { e.pat = e.phase2pat; e.pi = 0; }
+  e.strength += (e.phase2Str || 2);
+  if(!SIM){ toast(e.name + ' 进入第二阶段！'); }
+}
+function enemyTurn(){
+  var b=G.b, e=b.enemy, p=b.player;
+  if(e.poison > 0){
+    var pd = e.poison;
+    e.hp -= pd; e.poison = Math.max(0, e.poison - 2);
+    if(!SIM) floatText('-'+pd, '#9ef07a', '#enemy');
+    if(e.hp <= 0){ checkEnd(); return; }
+  }
+  var it = e.pat[e.pi % e.pat.length];
+  e.pi++;
+  if(it.k === 'atk'){
+    var hits = it.hits || 1;
+    for(var i=0;i<hits;i++){
+      if(p.hp <= 0) break;
+      var d = calcDmg(Math.round(it.v * e.dmgScale), e, p);
+      var real = hit(p, d);
+      if(!SIM) floatText('-'+real, '#ff6b6b', '.hpwrap');
+      if(real > 0 && p.painStr > 0) p.strength += p.painStr;
+      if(p.thorns > 0 && e.hp > 0){
+        e.hp -= p.thorns;
+        if(!SIM) floatText('-'+p.thorns, '#c9a6ff', '#enemy');
+      }
+    }
+  } else if(it.k === 'blk'){
+    e.block += Math.round(it.v * e.dmgScale);
+  } else if(it.k === 'buff'){
+    e.strength += it.v;
+  } else if(it.k === 'weak'){
+    p.weak += it.v;
+  } else if(it.k === 'poison'){
+    p.poison += it.v;
+  }
+  if(e.weak > 0) e.weak--;
+  if(e.vuln > 0) e.vuln--;
+  if(e.hp <= 0){ checkEnd(); return; }
+  if(p.hp <= 0){ checkEnd(); return; }
+  checkPhase();
+  startPlayerTurn();
+}
+function endPlayerTurn(){
+  var b=G.b;
+  if(!b || b.state !== 'player') return;
+  var p=b.player;
+  if(p.regen > 0) healPlayer(p.regen);
+  b.discard = b.discard.concat(b.hand);
+  b.hand = [];
+  if(p.weak > 0) p.weak--;
+  if(p.vuln > 0) p.vuln--;
+  b.state = 'enemy';
+  enemyTurn();
+  if(b.state === 'player') b.state = 'player';
+}
+function playCard(i){
+  var b=G.b;
+  if(!b || b.state !== 'player' || SIM && false) return;
+  var id = b.hand[i];
+  if(!id) return;
+  var c = CARDS[id];
+  if(!c || c.cost > b.energy) return;
+  b.energy -= c.cost;
+  b.hand.splice(i,1);
+  if(c.exhaust){ if(!b.exhaust) b.exhaust = []; b.exhaust.push(id); }
+  else { b.discard.push(id); }
+  b.playedThisTurn = (b.playedThisTurn||0) + 1;
+  c.play();
+  checkPhase();
+  if(b.state === 'player' || b.state === 'enemy') checkEnd();
+  if(!SIM) render();
+}
+
+/* ================= 遭遇 ================= */
+function chooseEnemy(role, row){
+  if(role === 'boss') return POOL_BOSS[(G.run.bossIdx||0) % POOL_BOSS.length];
+  if(role === 'elite') return pick(POOL_ELITE);
+  return pick(row < 4 ? POOL_A : POOL_B);
+}
+function startBattle(role, row){
+  var t = chooseEnemy(role, row);
+  var isBoss = role === 'boss';
+  var hp = isBoss ? t.hp : Math.round(t.hp * (1 + row*0.05));
+  var e = {name:t.name, emoji:t.emoji, art:t.art, phase2art:t.phase2art, phase2pat:t.phase2pat,
+           phase2Str:t.phase2Str, phase2Done:false,
+           hp:hp, maxHp:hp, block:0, strength:0, weak:0, vuln:0, poison:0,
+           pat:t.pat, pi:0, dmgScale: isBoss ? 1.22 : (1 + row*0.025)};
+  var p = {hp:G.run.hp, maxHp:G.run.maxHp, block:0, strength:0, weak:0, vuln:0, poison:0,
+           regen:0, shieldGen:0, thorns:0, frogGod:0,
+           perDraw:0, perDrawBlock:0, perDrawShuffle:0, extraDraw:0, handCap:0,
+           bloodRage:0, painStr:0, keepBlock:0, blockToDmg:0, blockAcc:0, poisonAmp:0, bloodPact:0};
+  if(hasRelic('fountain')){ p.extraDraw = 4; }
+  if(hasRelic('bloodpact')){
+    p.bloodRage = 2; p.bloodPact = 1;
+    p.hp = Math.min(p.maxHp, p.hp + 6);
+  }
+  if(hasRelic('ironplate')) p.keepBlock = 50;
+  if(hasRelic('poisonjar')) p.poisonAmp = 4;
+  G.b = {enemy:e, player:p, energy:0, maxEnergy: hasRelic('core') ? 4 : 3,
+         draw:shuffle(G.run.deck.slice()), hand:[], discard:[], turn:0,
+         state:'player', role:role, row:row,
+         gold: isBoss ? 120 : (role==='elite' ? 38 + ri(9) : 14 + ri(9) + row*2)};
+  if(hasRelic('courage')) p.block += 8;
+  startPlayerTurn();
+}
+function rollReward(){
+  var pool = [];
+  for(var k in CARDS){ if(CARDS[k].rarity !== 'basic') pool.push(k); }
+  var out = [], guard = 0;
+  if(G.run && G.run.path){
+    var mine = pool.filter(function(x){ return CARDS[x].path === G.run.path; });
+    var want = 1 + (rnd() < 0.45 ? 1 : 0);
+    while(want-- > 0 && mine.length){
+      var c = pick(mine); mine.splice(mine.indexOf(c),1); out.push(c);
+    }
+  }
+  while(out.length < 3 && guard++ < 200){
+    var r = rnd(), want = r < 0.22 ? 'rare' : (r < 0.7 ? 'uncommon' : 'common');
+    var cands = pool.filter(function(k){ return CARDS[k].rarity === want && out.indexOf(k) < 0; });
+    if(!cands.length) continue;
+    out.push(pick(cands));
+  }
+  return out;
+}
+function randomRelic(){
+  var all = Object.keys(RELICS).filter(function(k){ return G.run.relics.indexOf(k) < 0; });
+  if(!all.length) return null;
+  return pick(all);
+}
+function addRelic(id){
+  if(!id) return;
+  G.run.relics.push(id);
+  if(id === 'heart'){ G.run.maxHp += 15; G.run.hp += 15; }
+}
+
+/* ================= 一局 ================= */
+function newRun(seed){
+  srand(seed === undefined ? (Date.now() & 0x7fffffff) : seed);
+  G.run = {hp:80, maxHp:80, gold:99, deck:[], relics:[], row:0, map:genMap(),
+           path:null, bossIdx: ri(POOL_BOSS.length),
+           stats:{draws:0, hpLost:0, blockGain:0, poison:0}};
+  for(var i=0;i<5;i++) G.run.deck.push('strike');
+  for(var j=0;j<4;j++) G.run.deck.push('defend');
+  G.run.deck.push('hop');
+  addRelic(pick(['courage','whetstone','shieldbit','bag']));
+  G.b = null; G.reward = null; G.shop = null; G.ev = null; G.rv = null;
+  G.screen = 'map';
+}
+function genMap(){
+  var plan = [
+    ['battle','battle'],
+    ['battle','event'],
+    ['elite','battle'],
+    ['rest','shop'],
+    ['battle','event'],
+    ['elite','battle'],
+    ['shop','rest'],
+    ['battle','battle'],
+    ['boss']
+  ];
+  return plan.map(function(types, i){
+    var nodes = types.map(function(t){ return {type:t}; });
+    if(i > 0 && i < 8 && rnd() < 0.5) nodes.reverse();
+    return nodes;
+  });
+}
+
+/* ================= 界面 ================= */
+var NODE_ICON = {battle:'⚔️', elite:'💀', shop:'🛒', rest:'🔥', boss:'👑', event:'🎲'};
+var NODE_NAME = {battle:'战斗', elite:'精英', shop:'商店', rest:'篝火', boss:'魔王', event:'事件'};
+
+function floatText(txt, color, sel){
+  if(SIM) return;
+  var el = sel ? document.querySelector(sel) : null;
+  var r = el ? el.getBoundingClientRect() : {left:innerWidth/2, top:innerHeight/2, width:0, height:0};
+  var d = document.createElement('div');
+  d.className = 'float'; d.textContent = txt; d.style.color = color;
+  d.style.left = (r.left + r.width/2) + 'px';
+  d.style.top = (r.top + r.height*0.3) + 'px';
+  document.getElementById('fx').appendChild(d);
+  setTimeout(function(){ d.remove(); }, 780);
+}
+function shakeEnemy(){
+  if(SIM) return;
+  var el = document.querySelector('#enemy');
+  if(!el) return;
+  el.classList.remove('hit');
+  void el.offsetWidth;
+  el.classList.add('hit');
+}
+function toast(msg){
+  if(SIM) return;
+  var d = document.createElement('div');
+  d.className = 'toast'; d.textContent = msg;
+  document.getElementById('fx').appendChild(d);
+  setTimeout(function(){ d.remove(); }, 1600);
+}
+
+function statusChips(o){
+  var out = [];
+  if(o.perDraw) out.push(['💧 心流 '+o.perDraw, 'good']);
+  if(o.blockToDmg) out.push(['⚡ 盾反 '+o.blockToDmg, 'good']);
+  if(o.bloodRage) out.push(['🩸 狂血 '+o.bloodRage, 'good']);
+  if(o.painStr) out.push(['💢 痛觉 '+o.painStr, 'good']);
+  if(o.keepBlock) out.push(['🗿 保留 '+o.keepBlock+'%', 'good']);
+  if(o.extraDraw) out.push(['♾️ 额外抽 '+o.extraDraw, 'good']);
+  if(o.poisonAmp) out.push(['🦠 腐蚀 '+o.poisonAmp, 'good']);
+  if(o.strength) out.push(['😤 力量 '+o.strength, 'good']);
+  if(o.weak) out.push(['🌀 虚弱 '+o.weak, 'bad']);
+  if(o.vuln) out.push(['💔 易伤 '+o.vuln, 'bad']);
+  if(o.poison) out.push(['☠️ 中毒 '+o.poison, 'bad']);
+  if(o.regen) out.push(['🌱 再生 '+o.regen, 'good']);
+  if(o.shieldGen) out.push(['🔋 护盾 '+o.shieldGen, 'good']);
+  if(o.thorns) out.push(['🌵 荆棘 '+o.thorns, 'good']);
+  if(o.frogGod) out.push(['✨ 蛙神 '+o.frogGod, 'good']);
+  return out.map(function(x){ return '<span class="st '+x[1]+'">'+x[0]+'</span>'; }).join('');
+}
+function hudBar(){
+  if(!G.run) return '';
+  var chips = G.run.relics.map(function(id){
+    var r = RELICS[id];
+    return '<button class="rchip" data-act="relic" data-id="'+id+'" title="'+r.desc+'">' +
+      '<span class="re">'+r.emoji+'</span>'+r.name+'</button>';
+  }).join('');
+  return '<div class="hud">' +
+    '<span class="hudgold">🪙 '+G.run.gold+'</span>' +
+    (G.run.path ? '<span class="pathchip" style="border-color:'+PATHS[G.run.path].color+'66;color:'+PATHS[G.run.path].color+'">'+
+      PATHS[G.run.path].emoji+' '+PATHS[G.run.path].name+'</span>' : '') +
+    '<div class="hudrelics">' + (chips || '<span class="rnone">还没有遗物</span>') + '</div>' +
+  '</div>';
+}
+function relicModal(){
+  if(!G.rv) return '';
+  var r = RELICS[G.rv];
+  if(!r) return '';
+  return '<div class="modal" data-act="closerelic"><div class="mcard">' +
+    '<div class="e">'+r.emoji+'</div>' +
+    '<div class="mn">'+r.name+'</div>' +
+    '<div class="md">'+r.desc+'</div>' +
+    '<div class="mtip">遗 物 · 全 程 生 效</div>' +
+    '<button class="btn wide" data-act="closerelic" style="margin-top:14px">知道了</button>' +
+  '</div></div>';
+}
+function cardHTML(id, i){
+  var c = CARDS[id];
+  var dis = c.cost > G.b.energy ? ' disabled' : '';
+  return '<button class="card '+c.type+dis+'" data-act="play" data-i="'+i+'">' +
+    '<div class="cost">'+c.cost+'</div>' +
+    '<div class="nm">'+c.name+'</div>' +
+    '<div class="em">'+c.emoji+'</div>' +
+    '<div class="ds">'+c.desc+'</div></button>';
+}
+function intentText(it, e){
+  if(!it) return '🤔 思考中';
+  var v = Math.round(it.v * e.dmgScale);
+  if(it.k === 'atk') return '⚔️ 攻击 ' + v + (it.hits ? ' ×'+it.hits : '');
+  if(it.k === 'blk') return '🛡️ 防御 ' + v;
+  if(it.k === 'buff') return '💪 强化 +'+it.v+' 力量';
+  if(it.k === 'weak') return '🌀 削弱 虚弱 '+it.v;
+  if(it.k === 'poison') return '☠️ 施加 '+it.v+' 中毒';
+  return '???';
+}
+
+/* ---------- 各界面 ---------- */
+var FLOOR_BG = ['village','forest','mountain','bridge','courtyard','hall','courtyard','hall','throne'];
+function backdrop(row, name){
+  var n = name || FLOOR_BG[Math.min(8, Math.max(0, row||0))];
+  return '<div class="bgimg" style="background-image:url(art/bg/'+n+'.webp)"></div>';
+}
+function screenTitle(){
+  return '<div class="screen titleScreen">' + backdrop(0, 'cover') +
+    '<div class="titlewrap">' +
+      '<div class="center"><img class="art hero" src="art/char/hero-poster.webp" alt="奶蛙勇者"/>' +
+      '<h1 class="title">奶蛙远征</h1>' +
+      '<div class="sub">从憋笑魔王手中救回公主的<br/>卡牌构筑 · 肉鸽爬塔</div></div>' +
+      '<div class="panel small muted" style="line-height:1.8">' +
+        '⚡ 每回合 3 点能量，打出卡牌攻击或防御<br/>' +
+        '🎴 战斗结束后从三张牌里选一张，加入卡组<br/>' +
+        '🗺️ 一路爬 9 层，篝火回血、商店删牌、事件赌命<br/>' +
+        '👑 第 9 层是憋笑魔王' +
+      '</div>' +
+      (readSave() ? '<button class="btn primary wide" data-act="continue">继续远征 · 第 ' +
+          (readSave().run.row + 1) + ' / 9 层</button>' : '') +
+      '<button class="btn ' + (readSave() ? '' : 'primary ') + 'wide" data-act="start">' +
+        (readSave() ? '重新开始' : '开始远征') + '</button>' +
+      '<div class="center small muted">点击卡牌打出 · 结束回合让敌人行动</div>' +
+      '<div class="center small muted" style="opacity:.75">' +
+        (function(){ var s = readStats();
+          return '本地记录：挑战 ' + (s.runs||0) + ' 次 · 通关 ' + (s.wins||0) + ' 次 · 最深 ' + (s.best||0) + ' 层';
+        })() + '</div>' +
+      '<div class="center muted" style="font-size:10px;opacity:.55">美术素材：原版《勇者奶蛙传》· 仅供个人学习</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function screenMap(){
+  var r = G.run;
+  var rows = r.map.map(function(nodes, i){
+    var cls = i < r.row ? 'done' : (i === r.row ? 'cur' : '');
+    return '<div class="mrow '+cls+'">' + nodes.map(function(n, j){
+      var avail = i === r.row;
+      return '<button class="node '+n.type+(avail?' avail':'')+'" ' +
+        (avail ? 'data-act="node" data-x="'+i+'" data-y="'+j+'"' : '') + '>' +
+        '<span class="ni">'+NODE_ICON[n.type]+'</span>' +
+        '<span class="nl">'+NODE_NAME[n.type]+'</span></button>';
+    }).join('') + '</div>';
+  }).join('');
+
+  var hpPct = Math.max(0, r.hp / r.maxHp * 100);
+  return '<div class="screen">' + backdrop(r.row) +
+    '<div class="topbar"><span>🌊 第 '+(r.row+1)+' / 9 层</span><span class="grow"></span>' +
+      '<span class="chip">🃏 '+r.deck.length+' 张</span></div>' +
+    '<div class="hpline small"><span>❤️ '+r.hp+' / '+r.maxHp+'</span><span class="muted">选择下一站</span></div>' +
+    '<div class="bar" style="margin-bottom:8px"><i style="width:'+hpPct+'%;background:linear-gradient(90deg,#ff6b6b,#ffa06b)"></i></div>' +
+    '<div class="maplist">'+rows+'</div>' +
+    '<button class="btn wide" data-act="deck" style="margin-top:8px">查看卡组</button>' +
+  '</div>';
+}
+
+function screenBattle(){
+  var b = G.b, e = b.enemy, p = b.player;
+  var it = e.pat[e.pi % e.pat.length];
+  var hpPct = Math.max(0, p.hp / p.maxHp * 100);
+  var ehpPct = Math.max(0, e.hp / e.maxHp * 100);
+  return '<div class="screen">' + backdrop(b.row) +
+    '<div class="bwrap">' +
+      '<div class="bleft">' +
+        '<div class="topbar"><span>🌊 第 '+(b.row+1)+' / 9 层</span><span class="grow"></span>' +
+          '<span class="chip">🃏 '+G.run.deck.length+' 张</span></div>' +
+        '<div class="bhead"><div class="hpwrap">' +
+          '<div class="hpline"><span>❤️ 奶蛙勇者</span><span>'+p.hp+' / '+p.maxHp+'</span></div>' +
+          '<div class="bar hp"><i style="width:'+hpPct+'%"></i></div></div>' +
+          '<div class="energy">⚡ '+b.energy+' / '+b.maxEnergy+'</div></div>' +
+        '<div class="arena"><div class="enemy'+(e.maxHp>=100?' boss':'')+'" id="enemy">' +
+          '<div class="face">'+(e.art?'<img src="'+e.art+'" alt=""/>':e.emoji)+'</div>' +
+          '<div class="enm">'+e.name+(e.phase2Done ? '<span class="phase2">第二阶段</span>' : '')+'</div>' +
+          '<div class="bar ehp"><i style="width:'+ehpPct+'%"></i></div>' +
+          '<div class="enums">'+Math.max(0,e.hp)+' / '+e.maxHp+'</div>' +
+          '<div class="intent">'+intentText(it, e)+'</div>' +
+          '<div class="statuses">'+statusChips(e) + (e.block>0 ? '<span class="st">🧱 格挡 '+e.block+'</span>' : '')+'</div>' +
+        '</div>' +
+          '<div class="me"><img src="art/char/'+(p.hp/p.maxHp<=0.34?'hero-guard-hit':'hero')+'.webp" alt=""/>' + (p.block>0 ? '<span class="blk">🛡️ '+p.block+'</span>' : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bright">' +
+        '<div class="pstatus">'+statusChips(p)+'</div>' +
+        '<div class="hand">'+ b.hand.map(function(id,i){ return cardHTML(id,i); }).join('') + '</div>' +
+        '<div class="bfoot"><div class="pile">🂠 '+b.draw.length+' · 🗑 '+b.discard.length+'</div>' +
+          '<button class="btn primary" data-act="end">结束回合</button></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function screenReward(){
+  var rw = G.reward;
+  return '<div class="screen" style="justify-content:center">' + backdrop(G.b ? G.b.row : G.run.row) +
+    '<div class="center"><div style="font-size:38px">🏆</div>' +
+      '<div style="font-weight:900;font-size:18px;margin-top:4px">战斗胜利</div>' +
+      '<div class="small muted" style="margin-top:4px">获得 🪙 '+rw.gold+' 金币</div></div>' +
+    '<div class="small muted center" style="margin:14px 0 6px">选择一张牌加入卡组</div>' +
+    '<div class="hand" style="justify-content:center;flex-wrap:nowrap">' +
+      rw.cards.map(function(id,i){
+        var c = CARDS[id];
+        return '<button class="card '+c.type+'" data-act="take" data-i="'+i+'">' +
+          '<div class="cost">'+c.cost+'</div><div class="nm">'+c.name+'</div>' +
+          '<div class="em">'+c.emoji+'</div><div class="ds">'+c.desc+'</div></button>';
+      }).join('') + '</div>' +
+    '<button class="btn wide" data-act="skipcard" style="margin-top:10px">跳过（不要牌）</button>' +
+  '</div>';
+}
+
+function screenShop(){
+  var s = G.shop, r = G.run;
+  var disc = hasRelic('coinrelic') ? 0.75 : 1;
+  return '<div class="screen">' + backdrop(r.row) +
+    '<div class="topbar"><span>🛒 王城商店</span><span class="grow"></span><span class="chip">🃏 '+r.deck.length+' 张</span></div>' +
+    '<div class="keeper"><img src="art/char/jester.webp" alt=""/><div>小丑商人：“要不是为了看笑话，这些好牌我才不卖。”</div></div>' +
+    '<div class="items">' + s.cards.map(function(id,i){
+      var c = CARDS[id], price = Math.round(s.prices[i]*disc);
+      var can = r.gold >= price;
+      return '<button class="item" data-act="buy" data-i="'+i+'" '+(can?'':'disabled')+'>' +
+        '<span class="ic">'+c.emoji+'</span>' +
+        '<span class="tx"><span class="t1">'+c.name+'</span><span class="t2">'+c.desc+'</span></span>' +
+        '<span class="price">🪙 '+price+'</span></button>';
+    }).join('') + '</div>' +
+    '<div class="grid2" style="margin-top:10px">' +
+      '<button class="btn" data-act="remove" '+(r.gold>=75?'':'disabled')+'>🗑 删一张牌<br/><span class="small">75 金</span></button>' +
+      '<button class="btn" data-act="heal" data-n="25" '+(r.gold>=40?'':'disabled')+'>🥛 回复 25 血<br/><span class="small">40 金</span></button>' +
+    '</div>' +
+    '<button class="btn primary wide" data-act="leave" style="margin-top:10px">离开商店</button>' +
+  '</div>';
+}
+
+function screenRest(){
+  return '<div class="screen" style="justify-content:center;gap:14px">' + backdrop(G.run.row) +
+    '<div class="center"><img class="art mid" src="art/char/hero.webp" style="height:120px;width:auto;opacity:.92" alt=""/>' +
+      '<div style="font-weight:900;font-size:18px;margin-top:8px">篝火 🔥</div>' +
+      '<div class="small muted" style="margin-top:6px">喘口气，或者把无用的牌烧掉。</div></div>' +
+    '<button class="btn primary wide" data-act="restheal">🥛 休息 · 回复 30% 生命</button>' +
+    '<button class="btn wide" data-act="restremove">🗑 冥想 · 删掉一张牌</button>' +
+    '<button class="btn wide" data-act="leave">直接离开</button>' +
+  '</div>';
+}
+
+function screenRemove(){
+  var counts = {};
+  G.run.deck.forEach(function(id){ counts[id] = (counts[id]||0) + 1; });
+  var ids = Object.keys(counts);
+  return '<div class="screen">' +
+    '<div class="topbar"><span>🗑 选择要移除的牌</span><span class="grow"></span>' +
+      '<span class="chip">🃏 '+G.run.deck.length+'</span></div>' +
+    '<div class="deckgrid">' + ids.map(function(id){
+      var c = CARDS[id];
+      return '<button class="minicard qty" data-act="removepick" data-id="'+id+'">' +
+        (counts[id]>1 ? '<span class="badge">×'+counts[id]+'</span>' : '') +
+        '<span class="nm">'+c.emoji+' '+c.name+'</span><span class="ds">'+c.desc+'</span></button>';
+    }).join('') + '</div>' +
+    '<button class="btn wide" data-act="cancelremove" style="margin-top:10px">取消</button>' +
+  '</div>';
+}
+
+function screenDeck(){
+  var counts = {};
+  G.run.deck.forEach(function(id){ counts[id] = (counts[id]||0) + 1; });
+  var ids = Object.keys(counts);
+  return '<div class="screen">' +
+    '<div class="topbar"><span>🃏 当前卡组</span><span class="grow"></span>' +
+      '<span class="chip">'+G.run.deck.length+' 张</span></div>' +
+    '<div class="deckgrid">' + ids.map(function(id){
+      var c = CARDS[id];
+      return '<div class="minicard qty">' +
+        (counts[id]>1 ? '<span class="badge">×'+counts[id]+'</span>' : '') +
+        '<span class="nm">'+c.emoji+' '+c.name+'</span><span class="ds">'+c.desc+'</span></div>';
+    }).join('') + '</div>' +
+    '<button class="btn wide" data-act="backmap" style="margin-top:10px">返回地图</button>' +
+  '</div>';
+}
+
+function screenAwaken(){
+  var st = G.run.stats || {draws:0, hpLost:0, blockGain:0, poison:0};
+  var keys = ['draw','blood','block','poison'];
+  var cards = keys.map(function(id){
+    var a = PATHS[id];
+    var met = pathMet(id);
+    return '<button class="pathcard" data-act="path" data-id="'+id+'" style="--pc:'+a.color+'">' +
+      '<div class="pchead"><span class="pce">'+a.emoji+'</span><span class="pcn">'+a.name+'</span>' +
+      (met ? '<span class="pcdot">共鸣</span>' : '') + '</div>' +
+      '<div class="pctag">'+a.tag+'</div>' +
+      '<div class="pcdesc">'+a.desc+'</div>' +
+      '<div class="pcrelic">'+RELICS[a.relic].emoji+' '+RELICS[a.relic].name+' · '+RELICS[a.relic].desc+'</div>' +
+    '</button>';
+  }).join('');
+  return '<div class="screen">' + backdrop(2) +
+    '<div class="center" style="margin-bottom:6px">' +
+      '<div style="font-size:13px;letter-spacing:3px;color:#7bd4ff">流 派 觉 醒</div>' +
+      '<div class="sub" style="margin-top:6px">打完两场硬仗，你的战斗本能定了型。<br/>选一条路走到底——它会改变全局的构筑与数值。</div>' +
+    '</div>' +
+    '<div class="paths">' + cards + '</div>' +
+  '</div>';
+}
+function pathMet(id){
+  var st = G.run.stats || {};
+  if(id === 'draw') return (st.draws||0) >= 40;
+  if(id === 'blood') return (st.hpLost||0) >= 20;
+  if(id === 'block') return (st.blockGain||0) >= 80;
+  if(id === 'poison') return (st.poison||0) >= 20;
+  return false;
+}
+
+function screenEvent(){
+  var e = G.ev;
+  return '<div class="screen" style="justify-content:center;gap:14px">' +
+    '<div class="center"><div style="font-size:44px">'+e.emoji+'</div>' +
+      '<div style="font-weight:900;font-size:18px;margin-top:6px">'+e.title+'</div></div>' +
+    '<div class="panel small" style="line-height:1.8;color:#c3d2e6">'+e.text+'</div>' +
+    e.opts.map(function(o,i){
+      return '<button class="btn wide" data-act="ev" data-i="'+i+'">'+o.label+'</button>';
+    }).join('') +
+  '</div>';
+}
+
+function screenWin(){
+  return '<div class="screen" style="justify-content:center;gap:16px">' + backdrop(8) +
+    '<div class="center"><img class="art mid" src="art/char/princess.webp" style="height:158px;width:auto" alt=""/>' +
+      '<h1 class="title" style="font-size:26px">公主得救了！</h1>' +
+      '<div class="sub">憋笑魔王终于没憋住，笑到原地爆炸。<br/>奶蛙勇者，凯旋。</div></div>' +
+    '<div class="panel small muted">最终生命 '+G.run.hp+' / '+G.run.maxHp+' · 金币 '+G.run.gold+' · 卡组 '+G.run.deck.length+' 张</div>' +
+    '<button class="btn primary wide" data-act="again">再来一局</button>' +
+  '</div>';
+}
+
+function screenOver(){
+  return '<div class="screen" style="justify-content:center;gap:16px">' + backdrop(G.run.row) +
+    '<div class="center"><img class="art mid" src="art/char/hero-guard-hit.webp" style="height:118px;width:auto" alt=""/>' +
+      '<h1 class="title" style="font-size:24px;background:linear-gradient(180deg,#ffd0d0,#ff6b6b);-webkit-background-clip:text;background-clip:text">奶蛙倒下了</h1>' +
+      '<div class="sub">止步第 '+(G.run.row+1)+' 层。<br/>下次记得多带点防御牌。</div></div>' +
+    '<button class="btn primary wide" data-act="again">重新远征</button>' +
+  '</div>';
+}
+
+function render(){
+  if(SIM) return;
+  writeSave();
+  var app = document.getElementById('app');
+  var map = {
+    title: screenTitle, map: screenMap, battle: screenBattle, reward: screenReward,
+    shop: screenShop, rest: screenRest, remove: screenRemove, deck: screenDeck,
+    event: screenEvent, win: screenWin, over: screenOver, awaken: screenAwaken
+  };
+  var fn = map[G.screen] || screenTitle;
+  var withHud = G.run && ['map','battle','reward','shop','rest','remove','deck','event','awaken'].indexOf(G.screen) >= 0;
+  app.innerHTML = (withHud ? hudBar() : '') + fn() + relicModal();
+  if(G.screen === 'map'){
+    var ml = app.querySelector('.maplist');
+    if(ml) ml.scrollTop = 0;
+  }
+}
+
+/* ================= 事件表 ================= */
+var EVENTS = [
+  function(){ return {emoji:'🧿', title:'三眼商人', text:'他从斗篷下掏出三张卡牌，用三只眼睛轮流打量你的钱袋。', opts:[
+    {label:'支付 40 金，换一件遗物', eff:function(){
+      if(G.run.gold < 40){ toast('金币不够'); return false; }
+      G.run.gold -= 40; var id = randomRelic(); addRelic(id);
+      toast(id ? '获得遗物：' + RELICS[id].name : '没有可换的遗物'); return true;
+    }},
+    {label:'摇摇头离开', eff:function(){ return true; }}
+  ]};},
+  function(){ return {emoji:'⛲', title:'蛙之泉', text:'一汪泛着荧光的泉水，倒映出一只更胖的奶蛙。', opts:[
+    {label:'喝一口，回复 30 生命', eff:function(){
+      G.run.hp = Math.min(G.run.maxHp, G.run.hp + 30); toast('回复了 30 点生命'); return true;
+    }},
+    {label:'泡一会儿，最大生命 +8', eff:function(){
+      G.run.maxHp += 8; G.run.hp += 8; toast('最大生命 +8'); return true;
+    }}
+  ]};},
+  function(){ return {emoji:'🎲', title:'赌徒青蛙', text:'“押 20 点血，赢了给你 120 金。”它笑得很真诚。', opts:[
+    {label:'押上 20 生命', eff:function(){
+      if(G.run.hp <= 20){ toast('生命不够，赌不起'); return false; }
+      G.run.hp -= 20;
+      if(rnd() < 0.5){ G.run.gold += 120; toast('赢了！+120 金'); }
+      else { toast('输了…血白流了'); }
+      return true;
+    }},
+    {label:'不赌', eff:function(){ return true; }}
+  ]};},
+  function(){ return {emoji:'🗿', title:'古老石碑', text:'石碑上刻着看不懂的符文，摸一下好像能懂点什么。', opts:[
+    {label:'献上 30 金，刻下新牌', eff:function(){
+      if(G.run.gold < 30){ toast('金币不够'); return false; }
+      G.run.gold -= 30; var c = rollReward()[0]; G.run.deck.push(c);
+      toast('获得：' + CARDS[c].name); return true;
+    }},
+    {label:'随手捡走 20 金', eff:function(){ G.run.gold += 20; toast('+20 金'); return true; }}
+  ]};}
+];
+
+/* ================= 交互 ================= */
+function enterNode(row, idx){
+  var node = G.run.map[row][idx];
+  G.nodeRow = row;
+  if(node.type === 'battle'){ startBattle('battle', row); G.screen = 'battle'; }
+  else if(node.type === 'elite'){ startBattle('elite', row); G.screen = 'battle'; }
+  else if(node.type === 'boss'){ startBattle('boss', row); G.screen = 'battle'; }
+  else if(node.type === 'shop'){
+    var cards = rollReward(), prices = cards.map(function(id){
+      var r = CARDS[id].rarity;
+      return r === 'rare' ? 95 : (r === 'uncommon' ? 70 : 45);
+    });
+    G.shop = {cards:cards, prices:prices};
+    G.screen = 'shop';
+  }
+  else if(node.type === 'rest'){ G.screen = 'rest'; }
+  else if(node.type === 'event'){ G.ev = pick(EVENTS)(); G.screen = 'event'; }
+  render();
+}
+function leaveNode(){
+  G.run.row++;
+  G.b = null; G.shop = null; G.ev = null;
+  G.screen = 'map';
+  render();
+}
+function finishBattle(){
+  if(G.b && G.b.row === 8){ G.screen = 'win'; render(); return; }
+  var row = G.b ? G.b.row : 0;
+  G.reward = null;
+  if(!G.run.path && row >= 1){ G.b = null; G.screen = 'awaken'; render(); return; }
+  leaveNode();
+}
+
+document.getElementById('app').addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]');
+  if(!el) return;
+  var act = el.dataset.act;
+
+  if(act === 'start'){
+    if(readSave() && !confirm('已有进行中的远征，重新开始会覆盖它。继续吗？')) return;
+    newRun(); bumpStats({runs:1}); render(); return;
+  }
+  if(act === 'continue'){
+    var sv = readSave();
+    if(sv){ restoreSave(sv); render(); } else { toast('没有找到存档'); render(); }
+    return;
+  }
+  if(act === 'again'){ G.screen = 'title'; render(); return; }
+
+  if(act === 'node'){ enterNode(+el.dataset.x, +el.dataset.y); return; }
+
+  if(act === 'path'){
+    var pid = el.dataset.id;
+    if(!PATHS[pid]) return;
+    G.run.path = pid;
+    addRelic(PATHS[pid].relic);
+    if(pid === 'blood'){ G.run.maxHp += 12; G.run.hp += 12; }
+    toast('流派已选定：' + PATHS[pid].name);
+    leaveNode();
+    return;
+  }
+  if(act === 'relic'){ G.rv = el.dataset.id; render(); return; }
+  if(act === 'closerelic'){ G.rv = null; render(); return; }
+
+  if(act === 'play'){
+    if(!G.b) return;
+    playCard(+el.dataset.i);
+    return;
+  }
+  if(act === 'end'){
+    if(!G.b || G.b.state !== 'player') return;
+    endPlayerTurn();
+    if(G.b && G.b.state === 'won'){ render(); return; }
+    render();
+    return;
+  }
+
+  if(act === 'take'){
+    var id = G.reward.cards[+el.dataset.i];
+    G.run.deck.push(id);
+    toast('加入卡组：' + CARDS[id].name);
+    finishBattle();
+    return;
+  }
+  if(act === 'skipcard'){ toast('跳过选牌'); finishBattle(); return; }
+
+  if(act === 'buy'){
+    var i = +el.dataset.i, s = G.shop;
+    var price = s.prices[i];
+    if(G.run.gold < price){ toast('金币不够'); return; }
+    G.run.gold -= price;
+    G.run.deck.push(s.cards[i]);
+    toast('买下：' + CARDS[s.cards[i]].name);
+    s.cards.splice(i,1); s.prices.splice(i,1);
+    render();
+    return;
+  }
+  if(act === 'remove'){
+    if(G.run.gold < 75){ toast('金币不够'); return; }
+    G.removeFrom = 'shop'; G.screen = 'remove'; render(); return;
+  }
+  if(act === 'heal'){
+    if(G.run.gold < 40){ toast('金币不够'); return; }
+    G.run.gold -= 40;
+    G.run.hp = Math.min(G.run.maxHp, G.run.hp + 25);
+    toast('回复 25 生命');
+    render();
+    return;
+  }
+  if(act === 'leave'){ leaveNode(); return; }
+
+  if(act === 'restheal'){
+    var h = Math.ceil(G.run.maxHp * 0.3);
+    G.run.hp = Math.min(G.run.maxHp, G.run.hp + h);
+    toast('回复 ' + h + ' 生命');
+    leaveNode();
+    return;
+  }
+  if(act === 'restremove'){ G.removeFrom = 'rest'; G.screen = 'remove'; render(); return; }
+
+  if(act === 'removepick'){
+    var rid = el.dataset.id;
+    var k = G.run.deck.indexOf(rid);
+    if(k >= 0) G.run.deck.splice(k,1);
+    toast('移除了：' + CARDS[rid].name);
+    if(G.removeFrom === 'shop') G.run.gold -= 75;
+    G.removeFrom = null;
+    if(G.shop){ G.screen = 'shop'; render(); }
+    else { leaveNode(); }
+    return;
+  }
+  if(act === 'cancelremove'){
+    G.removeFrom = null;
+    G.screen = G.shop ? 'shop' : 'rest';
+    render();
+    return;
+  }
+
+  if(act === 'deck'){ G.screen = 'deck'; render(); return; }
+  if(act === 'backmap'){ G.screen = 'map'; render(); return; }
+
+  if(act === 'ev'){
+    var e = G.ev, opt = e.opts[+el.dataset.i];
+    var ok = opt.eff();
+    if(ok !== false){ leaveNode(); }
+    else { render(); }
+    return;
+  }
+});
+
+/* ================= 自测 ================= */
+function botStep(){
+  var b = G.b;
+  if(!b || b.state !== 'player') return;
+  var playable = [];
+  for(var i=0;i<b.hand.length;i++){
+    if(CARDS[b.hand[i]].cost <= b.energy) playable.push(i);
+  }
+  if(!playable.length){ endPlayerTurn(); return; }
+  var idx = playable[ri(playable.length)];
+  var id = b.hand[idx];
+  var c = CARDS[id];
+  b.energy -= c.cost;
+  b.hand.splice(idx,1);
+  if(c.exhaust){ if(!b.exhaust) b.exhaust=[]; b.exhaust.push(id); }
+  else b.discard.push(id);
+  b.playedThisTurn = (b.playedThisTurn||0) + 1;
+  c.play();
+  checkPhase();
+  checkEnd();
+}
+
+function botStepSmart(){
+  var b = G.b;
+  if(!b || b.state !== 'player') return;
+  var e = b.enemy, p = b.player;
+  var it = e.pat[e.pi % e.pat.length];
+  var incoming = it.k === 'atk' ? Math.round(it.v * e.dmgScale) * (it.hits || 1) : 0;
+  incoming = Math.max(0, incoming + e.strength - p.block);
+
+  function costOk(id){ return CARDS[id].cost <= b.energy; }
+  function first(pred){
+    for(var i=0;i<b.hand.length;i++){ if(costOk(b.hand[i]) && pred(CARDS[b.hand[i]], b.hand[i])) return i; }
+    return -1;
+  }
+  var idx = -1;
+  // 先上能力牌（越早滚雪球越强）
+  if(b.turn <= 2) idx = first(function(c){ return c.type === 'power'; });
+  // 挡不住的伤害先垫格挡
+  if(idx < 0 && incoming > p.hp * 0.45) idx = first(function(c){ return c.type === 'skill' && /格挡/.test(c.desc); });
+  // 过牌引擎
+  if(idx < 0) idx = first(function(c){ return c.cost === 0 && /抽/.test(c.desc); });
+  // 输出
+  if(idx < 0) idx = first(function(c){ return c.type === 'attack'; });
+  if(idx < 0) idx = first(function(c){ return c.type === 'skill' && /格挡/.test(c.desc); });
+  if(idx < 0) idx = first(function(){ return true; });
+  if(idx < 0){ endPlayerTurn(); return; }
+  var id = b.hand[idx], c = CARDS[id];
+  b.energy -= c.cost;
+  b.hand.splice(idx,1);
+  if(c.exhaust){ if(!b.exhaust) b.exhaust=[]; b.exhaust.push(id); }
+  else b.discard.push(id);
+  b.playedThisTurn = (b.playedThisTurn||0) + 1;
+  c.play();
+  checkPhase();
+  checkEnd();
+}
+
+function simOne(seed, pathId, smart, acc){
+  newRun(seed);
+  for(var row=0; row<9; row++){
+    if(!G.run.path && row >= 2){
+      var want = pathId === 'random' ? pick(['draw','blood','block','poison']) : pathId;
+      G.run.path = want;
+      addRelic(PATHS[want].relic);
+    }
+    var role = row === 8 ? 'boss' : ((row === 2 || row === 5) ? 'elite' : 'battle');
+    startBattle(role, row);
+    acc.battles++;
+    var guard = 0;
+    while(G.b.state === 'player' && guard++ < 900){
+      if(smart) botStepSmart(); else botStep();
+    }
+    if(guard >= 900) throw new Error('battle did not terminate at row ' + row);
+    if(G.b.state !== 'won'){ return false; }
+    acc.battles = acc.battles;
+    acc.winsByRow[row] = (acc.winsByRow[row]||0)+1;
+    if(G.reward && G.reward.cards.length){
+      var pool = G.reward.cards;
+      var mine = G.run.path ? pool.filter(function(x){ return CARDS[x].path === G.run.path; }) : [];
+      G.run.deck.push(mine.length ? pick(mine) : pick(pool));
+    }
+    if(row === 3 || row === 6) G.run.hp = Math.min(G.run.maxHp, G.run.hp + 12);
+  }
+  return true;
+}
+
+function selftest(){
+  SIM = true;
+  var mode = /paths/.test(location.search) ? 'paths' : (/smart/.test(location.search) ? 'smart' : 'random');
+  var res = {mode:mode, runs:0, wins:0, battles:0, errors:[], byPath:{}, byBoss:{}, deck:0};
+  var groups = mode === 'paths' ? ['draw','blood','block','poison'] : ['random'];
+  var smart = /smart/.test(location.search);
+  for(var g=0; g<groups.length; g++){
+    var pid = groups[g];
+    var acc = {runs:0, wins:0, battles:0, deaths:0, winsByRow:{}, byBoss:{}};
+    for(var s=0; s<150; s++){
+      try{
+        if(simOne(7000 + s + g*311, pid, smart, acc)) acc.wins++;
+        else acc.deaths++;
+      }catch(e){
+        res.errors.push(String((e && e.stack) || e));
+      }
+      acc.runs++;
+    }
+    res.byPath[pid] = {runs:acc.runs, clear:acc.wins, battlewins:acc.battles, winrate:Math.round(acc.wins/acc.runs*1000)/10, winsByRow:acc.winsByRow};
+    res.runs += acc.runs; res.wins += acc.wins; res.battles += acc.battles;
+  }
+  res.deck = G.run ? G.run.deck.length : 0;
+  document.body.innerHTML = '<pre id="selftest">' + JSON.stringify(res, null, 2) + '</pre>';
+}
+
+/* ================= 启动 ================= */
+if(/[?&]selftest/.test(location.search)){
+  selftest();
+} else {
+  render();
+}
+if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+window.__FROG__ = {G:G, CARDS:CARDS, RELICS:RELICS, PATHS:PATHS, newRun:newRun, startBattle:startBattle, render:render, enterNode:enterNode, checkPhase:checkPhase, addRelic:addRelic, readSave:readSave, restoreSave:restoreSave, clearSave:clearSave, readStats:readStats};
+})();
+</script>
+</body>
+</html>
