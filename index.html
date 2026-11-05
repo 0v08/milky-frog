@@ -1506,9 +1506,9 @@ if(/[?&]selftest/.test(location.search)){
   render();
 }
 if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
-  });
+  var regSW = function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); };
+  if(document.readyState === 'complete') regSW();
+  else window.addEventListener('load', regSW);
 }
 window.__FROG__ = {G:G, CARDS:CARDS, RELICS:RELICS, PATHS:PATHS, newRun:newRun, startBattle:startBattle, render:render, enterNode:enterNode, checkPhase:checkPhase, addRelic:addRelic, readSave:readSave, restoreSave:restoreSave, clearSave:clearSave, readStats:readStats};
 })();
