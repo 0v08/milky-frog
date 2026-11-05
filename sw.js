@@ -1,6 +1,7 @@
 /* 奶蛙远征 · Service Worker
-   策略：导航请求走「网络优先」保证拿到新版；静态资源走「缓存优先」保证离线可玩。 */
-const VERSION = 'v1.0.0';
+   策略：导航请求走「网络优先」保证拿到新版；静态资源走「缓存优先」保证离线可玩。
+   首次只预缓存首屏必需的小文件，其余美术在首次用到时按需缓存（避免第一次打开等太久）。 */
+const VERSION = 'v1.1.0';
 const CACHE = 'milkyfrog-' + VERSION;
 
 const PRECACHE = [
@@ -11,45 +12,19 @@ const PRECACHE = [
   './icon-512.png',
   './apple-touch-icon.png',
   './art/bg/village.webp',
-  './art/bg/forest.webp',
-  './art/bg/mountain.webp',
-  './art/bg/bridge.webp',
-  './art/bg/courtyard.webp',
-  './art/bg/hall.webp',
-  './art/bg/throne.webp',
-  './art/bg/cover.webp',
   './art/char/hero.webp',
-  './art/char/hero-poster.webp',
-  './art/char/princess.webp',
-  './art/char/princess-laugh.webp',
-  './art/char/boss.webp',
-  './art/char/boss-p2.webp',
-  './art/char/boss-laugh.webp',
-  './art/char/captain.webp',
-  './art/char/captain-p2.webp',
-  './art/char/general.webp',
-  './art/char/general-p2.webp',
-  './art/char/marshal.webp',
-  './art/char/marshal-p2.webp',
-  './art/char/penguin.webp',
-  './art/char/penguin-rage.webp',
-  './art/char/jester.webp',
-  './art/char/mimic.webp',
-  './art/char/hammer.webp',
-  './art/char/shield.webp',
-  './art/char/bell.webp',
-  './art/char/scribe.webp',
-  './art/char/dog.webp',
-  './art/char/bomber.webp',
-  './art/char/chaser.webp',
-  './art/char/shooter.webp',
-  './art/char/crate.webp'
+  './art/char/crate.webp',
+  './art/char/penguin.webp'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(PRECACHE).catch(() => {}))
+      .then(c => Promise.all(PRECACHE.map(u =>
+        fetch(u, { cache: 'no-cache' })
+          .then(r => r.ok ? c.put(u, r) : null)
+          .catch(() => null)
+      )))
       .then(() => self.skipWaiting())
   );
 });
@@ -85,8 +60,10 @@ self.addEventListener('fetch', e => {
     caches.match(req).then(hit => {
       if (hit) return hit;
       return fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(req, copy));
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
         return res;
       });
     })
